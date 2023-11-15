@@ -232,8 +232,8 @@ class FlattenLayer(Layer):
 import os 
 import re
 
-expected_params = {'n_samples': 8000, 'centers': 2, 'n_features': 16000}
-data_directory = '/u/anishm/cs378/FinalProjectPOC/data/'
+expected_params = {'n_samples': 10, 'centers': 2, 'n_features': 8000}
+data_directory = '/u/grajesh/Distributed-Machine-Learning/'
 
 # Get a list of files in the directory
 files = os.listdir(data_directory)
@@ -332,10 +332,10 @@ y_train = y_train.reshape((y_train.shape[0], 1, expected_params['centers']))
 # # Train the model
 # # model.fit(X, y_one_hot, epochs=10, batch_size = 1)
 
-import pandas as pd
-file_path = '/u/anishm/cs378/FinalProjectPOC/data/train_v2.csv'
-df = pd.read_csv(file_path)
-print(df.head())
+# import pandas as pd
+# file_path = '/u/anishm/cs378/FinalProjectPOC/data/train_v2.csv'
+# df = pd.read_csv(file_path)
+# print(df.head())
 
 net = Network()
 net.add(FCLayer(expected_params['n_features'], 12000))
