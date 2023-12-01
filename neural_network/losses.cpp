@@ -40,24 +40,3 @@ vector<double> categorical_cross_entropy_prime(const vector<double>& y_true, con
     }
     return result;
 }
-
-int main() {
-    // Example usage
-    vector<double> y_true = {1.0, 0.0, 1.0};
-    vector<double> y_pred = {0.8, 0.2, 0.9};
-
-    // Display results
-    cout << "Mean Squared Error: " << mse(y_true, y_pred) << "\n";
-    cout << "MSE Prime: ";
-    for (double value : mse_prime(y_true, y_pred)) {
-        cout << value << " ";
-    }
-
-    cout << "\nCategorical Cross Entropy: " << categorical_cross_entropy(y_true, y_pred) << "\n";
-    cout << "CCE Prime: ";
-    for (double value : categorical_cross_entropy_prime(y_true, y_pred)) {
-        cout << value << " ";
-    }
-
-    return 0;
-}

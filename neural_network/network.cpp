@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
-#include "layer.cpp"
+#include "layer.h"
 using namespace std;
 
 class Network {
@@ -83,15 +83,3 @@ public:
 
 };
 
-int main() {
-    // Example usage
-    Network network;
-    YourLayer layer;
-    network.add(&layer);
-
-    vector<vector<double>> x_train = {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
-    vector<vector<double>> y_train = {{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}};
-
-
-    return 0;
-}

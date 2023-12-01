@@ -2,7 +2,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
-#include "layer.cpp"
+#include "layer.h"
 using namespace std;
 
 
@@ -73,28 +73,3 @@ private:
     vector<double> input_;
     vector<double> output_;
 };
-
-int main() {
-    // Example usage
-    FCLayer fcLayer(3, 2);
-
-    vector<double> input = {1.0, 2.0, 3.0};
-    vector<double> output = fcLayer.forwardPropagation(input);
-
-    cout << "Forward Propagation Result: ";
-    for (double value : output) {
-        cout << value << " ";
-    }
-    cout << endl;
-
-    vector<double> outputError = {0.1, 0.2};
-    vector<double> inputError = fcLayer.backwardPropagation(outputError, 0.01);
-
-    cout << "Backward Propagation Input Error: ";
-    for (double value : inputError) {
-        cout << value << " ";
-    }
-    cout << endl;
-
-    return 0;
-}

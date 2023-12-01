@@ -92,35 +92,3 @@ vector<double> relu_prime(const vector<double>& x) {
     }
     return result;
 }
-
-int main() {
-    // Example usage
-    vector<double> input = {1.0, 2.0, 3.0};
-
-    vector<double> tanh_result = tanh_activation(input);
-    vector<double> tanh_prime_result = tanh_prime(input);
-
-    vector<double> softmax_result = softmax_activation(input);
-    vector<double> softmax_prime_result = softmax_prime(input);
-
-    // Display results
-    cout << "Tanh Activation: ";
-    for (double value : tanh_result) {
-        cout << value << " ";
-    }
-    cout << "\nTanh Prime: ";
-    for (double value : tanh_prime_result) {
-        cout << value << " ";
-    }
-
-    cout << "\nSoftmax Activation: ";
-    for (double value : softmax_result) {
-        cout << value << " ";
-    }
-    cout << "\nSoftmax Prime: ";
-    for (double value : softmax_prime_result) {
-        cout << value << " ";
-    }
-
-    return 0;
-}
