@@ -28,9 +28,12 @@ public:
     
 
     vector<double> backwardPropagation(const vector<double>& outputError, double learningRate) override {
-        vector<double> inputError(outputError.size());
-
-        inputError = activation_prime(input);
+        // do this self.activation_prime(self.input) * output_error
+        vector<double> inputError = activation_prime(input);
+        for (size_t i = 0; i < inputError.size(); ++i) {
+            inputError[i] *= outputError[i];
+        }
+        
 
         return inputError;
     }

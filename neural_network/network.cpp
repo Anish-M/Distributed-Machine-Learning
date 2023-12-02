@@ -73,21 +73,4 @@ private:
     }
 };
 
-// Example Layer Implementation
-class YourLayer : public Layer {
-public:
-    vector<double> forwardPropagation(const vector<double>& input) override {
-        // Your implementation for forward propagation
-        // Update this->output accordingly
-        return input;
-    }
-
-    vector<double> backwardPropagation(const vector<double>& outputError, double learningRate) override {
-        // Your implementation for backward propagation
-        // Update this->input based on outputError and learningRate
-        return outputError;
-    }
-
-
-};
 
