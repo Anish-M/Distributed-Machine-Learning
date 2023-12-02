@@ -18,25 +18,64 @@ int main() {
     // Read x_train and y_train from file data/generated8000_2_16000.txt
     // n_samples/n_features/n_classes
     // // freopen("../data/generated8000_2_16000.txt", "r", stdin);
-    // int n_samples, n_features, n_classes;
-    // n_samples = 8000;
-    // n_features = 2;
-    // n_classes = 16000;
+    int n_samples, n_features, n_classes;
+    n_samples = 10;
+    n_features = 5;
+    n_classes = 2;
 
     // Read x_train the first line of the file is 'X' folllowed by n_samples lines of n_features
     string s;
     
     // the first line is 'X'
-    cin << s;
     // open the file ../data/generated8000_2_16000.txt with cin
-    freopen("../data/generated8000_2_16000.txt", "r", stdin);
+    freopen("../data/generated_10_2_5.txt", "r", stdin);
     // read the first line of the file
     cin >> s;
+    cout << s << endl;
+    // the next n_samples lines are the x_train
+    for (int i = 0; i < n_samples; i++) {
+        vector<double> x;
+        for (int j = 0; j < n_features; j++) {
+            double temp;
+            cin >> temp;
+            x.push_back(temp);
+        }
+        // cout << "completed reading x_train[" << i << "]" << endl;
+        x_train.push_back(x);
+    }
+
+    // Read y_train the next line of the file is 'Y' folllowed by n_samples lines of n_classes
+    // the next line is 'Y'
+    cin >> s;
+    cout << s << endl;
+    // the next n_samples lines are the y_train
+    for (int i = 0; i < n_samples; i++) {
+        vector<double> y;
+        for (int j = 0; j < n_classes; j++) {
+            double temp;
+            cin >> temp;
+            y.push_back(temp);
+        }
+        // cout << "completed reading y_train[" << i << "]" << endl;
+        y_train.push_back(y);
+    }
+
+    // print the x_train and y_train size
+    cout << "x_train size: " << x_train.size() << endl;
+    cout << "y_train size: " << y_train.size() << endl;
+    // print the first x_train and y_train
+    cout << "x_train[0]: ";
+    for (int i = 0; i < x_train[0].size(); i++) {
+        cout << x_train[0][i] << " ";
+    }
+    cout << endl;
+    cout << "y_train[0]: ";
+    for (int i = 0; i < y_train[0].size(); i++) {
+        cout << y_train[0][i] << " ";
+    }
+    cout << endl;
 
     
-
-    
-
 
     Network net;
 
@@ -89,7 +128,7 @@ int main() {
     net.use(categorical_cross_entropy, categorical_cross_entropy_prime);
 
     // Train
-    net.fit(x_train, y_train, 1000, 0.1);
+    net.fit(x_train, y_train, 1, 0.1);
 
 
 
