@@ -3,6 +3,7 @@
         "*.java": "java",
         "*.py": "python",
         "*.c": "c",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "vector": "cpp"
     }
 }
