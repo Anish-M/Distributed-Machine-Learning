@@ -32,7 +32,7 @@ public:
         input_ = input;
 
         // Matrix multiplication and addition (dot product with bias)
-        output_ = vector<double>(bias[0].size(), 0.0);
+        output_ = vector<double>(weights[0].size(), 0.0);
         for (size_t i = 0; i < weights.size(); ++i) {
             for (size_t j = 0; j < weights[0].size(); ++j) {
                 output_[j] += input_[i] * weights[i][j];
@@ -66,21 +66,7 @@ public:
             bias[0][i] -= learningRate * outputError[i];
         }
 
-        cout << "New weights: " <<  endl;
-        for (int i = 0; i < weights.size(); i++) {
-            for (int j = 0; j < weights[i].size(); j++) {
-                cout << weights[i][j] << " ";
-            }
-            cout << endl;
-        }
-        cout << "New bias: " << endl;
-        for (int i = 0; i < bias.size(); i++) {
-            for (int j = 0; j < bias[i].size(); j++) {
-                cout << bias[i][j] << " ";
-            }
-            cout << endl;
-        }
-        cout << endl;
+    
         return inputError;
     }
 
