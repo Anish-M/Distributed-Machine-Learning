@@ -11,74 +11,86 @@
 
 using  namespace std;
 int main() {
-    // Training set
-    vector<vector<double>> x_train = {{0, 0}, {0, 1}, {1, 0}, {1, 1}, {9, 9}, {9, 8}, {8, 9}, {8, 8}};
-    vector<vector<double>> y_train = {{0}, {0}, {0}, {0}, {1}, {1}, {1}, {1}};
-    // Create the neural network
+    // Training set read x_train and y_train
+    vector<vector<double>> x_train;
+    vector<vector<double>> y_train;
+
+    // Read x_train and y_train from file data/generated8000_2_16000.txt
+    // n_samples/n_features/n_classes
+    // // freopen("../data/generated8000_2_16000.txt", "r", stdin);
+    // int n_samples, n_features, n_classes;
+    // n_samples = 8000;
+    // n_features = 2;
+    // n_classes = 16000;
+
+    // Read x_train the first line of the file is 'X' folllowed by n_samples lines of n_features
+    string s;
+    
+    // the first line is 'X'
+    cin << s;
+    // open the file ../data/generated8000_2_16000.txt with cin
+    freopen("../data/generated8000_2_16000.txt", "r", stdin);
+    // read the first line of the file
+    cin >> s;
+
+    
+
+    
+
+
     Network net;
 
-    // Add layers and activations
-    Layer* fc1 = new FCLayer(2, 3);
+    // net = Network()
+    // net.add(FCLayer(10000, 7500))
+    // net.add(ActivationLayer(tanh, tanh_prime))
+    // net.add(FCLayer(7500, 5000))
+    // net.add(ActivationLayer(tanh, tanh_prime))
+    // net.add(FCLayer(5000, 2500))
+    // net.add(ActivationLayer(tanh, tanh_prime))
+    // net.add(FCLayer(2500, 1000))
+    // net.add(ActivationLayer(tanh, tanh_prime))
+    // net.add(FCLayer(1000, 500))
+    // net.add(ActivationLayer(tanh, tanh_prime))
+    // net.add(FCLayer(500, 250))
+    // net.add(ActivationLayer(tanh, tanh_prime))
+    // net.add(FCLayer(250, 2))
+    // net.add(ActivationLayer(softmax, softmax_prime))
+
+    Layer* fc1 = new FCLayer(1000, 7500);
     Layer* act1 = new ActivationLayer(tanh_activation, tanh_prime);
-    Layer* fc2 = new FCLayer(3, 1);
+    Layer* fc2 = new FCLayer(7500, 5000);
     Layer* act2 = new ActivationLayer(tanh_activation, tanh_prime);
+    Layer* fc3 = new FCLayer(5000, 2500);
+    Layer* act3 = new ActivationLayer(tanh_activation, tanh_prime);
+    Layer* fc4 = new FCLayer(2500, 1000);
+    Layer* act4 = new ActivationLayer(tanh_activation, tanh_prime);
+    Layer* fc5 = new FCLayer(1000, 500);
+    Layer* act5 = new ActivationLayer(tanh_activation, tanh_prime);
+    Layer* fc6 = new FCLayer(500, 250);
+    Layer* act6 = new ActivationLayer(tanh_activation, tanh_prime);
+    Layer* fc7 = new FCLayer(250, 2);
+    Layer* act7 = new ActivationLayer(softmax_activation, softmax_prime);
 
     net.add(fc1);
     net.add(act1);
     net.add(fc2);
     net.add(act2);
+    net.add(fc3);
+    net.add(act3);
+    net.add(fc4);
+    net.add(act4);
+    net.add(fc5);
+    net.add(act5);
+    net.add(fc6);
+    net.add(act6);
+    net.add(fc7);
+    net.add(act7);
 
-    net.use(mse, mse_prime);
+    net.use(categorical_cross_entropy, categorical_cross_entropy_prime);
 
-    // // // Train the network
-    net.fit(x_train, y_train, 50, 0.1);
-
-    // // // Test the network
-    for (size_t i = 0; i < x_train.size(); ++i) {
-        vector<double> predicted = net.predict(x_train[i]);
-        cout << "Input: (" << x_train[i][0] << ", " << x_train[i][1] << ") Output: " << predicted[0] << endl;
-    }
+    // Train
+    net.fit(x_train, y_train, 1000, 0.1);
 
 
-    // test fc2 layer with sample input, output and print the weights
-    // FCLayer* fc2 = new FCLayer(2, 3);
-    // vector<double> input = {1, 1};
-    // vector<double> output = fc2->forwardPropagation(input);
-    // // loop through input nad print 
-    // cout << "Input: " << endl;
-    // for (size_t i = 0; i < input.size(); ++i) {
-    //     cout << input[i] << " ";
-    // }
-    // cout << endl;
-    // cout << "Output: " << endl;
-    // for (size_t i = 0; i < output.size(); ++i) {
-    //     cout << output[i] << " ";
-    // }
-    // cout << endl;
-    // cout << "Weights: " << endl;
-    // for (size_t i = 0; i < fc2->weights.size(); ++i) {
-    //     for (size_t j = 0; j < fc2->weights[0].size(); ++j) {
-    //         cout << fc2->weights[i][j] << " ";
-    //     }
-    //     cout << endl;
-    // }
-
-    // test activation layer with sample input, output and print the weights
-    // ActivationLayer* act1 = new ActivationLayer(tanh_activation, tanh_prime);
-    // vector<double> input = {1, 1};
-    // vector<double> output = act1->forwardPropagation(input);
-    // // loop through input nad print
-    // cout << "Input: " << endl;
-    // for (size_t i = 0; i < input.size(); ++i) {
-    //     cout << input[i] << " ";
-    // }
-    // cout << endl;
-    // cout << "Output: " << endl;
-    // for (size_t i = 0; i < output.size(); ++i) {
-    //     cout << output[i] << " ";
-    // }
-    // cout << endl;
-
-    // test mse and mse prime
 
 }
