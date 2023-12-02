@@ -7,25 +7,25 @@ using namespace std;
 
 
 class FCLayer : public Layer {
-private:
+public:
     vector<vector<double>> weights;
     vector<vector<double>> bias;
 
-public:
     FCLayer(int inputSize, int outputSize) {
         weights.resize(inputSize, vector<double>(outputSize));
         bias.resize(1, vector<double>(outputSize));
 
-        // Initialize weights and bias with random values between -0.5 and 0.5
+        // Initialize weights and bias with random values between 0 and1
         srand(time(0));
         for (int i = 0; i < inputSize; ++i) {
             for (int j = 0; j < outputSize; ++j) {
-                weights[i][j] = static_cast<double>(rand()) / RAND_MAX - 0.5;
+                weights[i][j] = static_cast<double>(rand()) / RAND_MAX;
             }
         }
         for (int i = 0; i < outputSize; ++i) {
-            bias[0][i] = static_cast<double>(rand()) / RAND_MAX - 0.5;
+            bias[0][i] = static_cast<double>(rand()) / RAND_MAX;
         }
+
     }
 
     vector<double> forwardPropagation(const vector<double>& input) override {

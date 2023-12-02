@@ -47,6 +47,7 @@ private:
                     output = layer->forwardPropagation(output);
                 }
 
+
                 // Compute loss (for display purpose only)
                 err += loss(y_train[j], output);
 
@@ -56,6 +57,13 @@ private:
                     Layer* layer = *layerIter;
                     error = layer->backwardPropagation(error, learning_rate);
                 }
+
+                // loop through and print y_train[j]
+                // cout << "y_train[j]: "  <<  y_train[j][0] << endl;
+                // cout << "output: " << output[0] << endl;
+
+                // cout << "output: " << output << endl;
+                // cout << "error: " << error << endl;
             }
 
             // Calculate average error on all samples

@@ -12,8 +12,8 @@
 using  namespace std;
 int main() {
     // Training set
-    vector<vector<double>> x_train = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-    vector<vector<double>> y_train = {{0}, {1}, {1}, {0}};
+    vector<vector<double>> x_train = {{0, 0}, {0, 1}, {1, 0}, {1, 1}, {9, 9}, {9, 8}, {8, 9}, {8, 8}};
+    vector<vector<double>> y_train = {{0}, {0}, {0}, {0}, {1}, {1}, {1}, {1}};
     // Create the neural network
     Network net;
 
@@ -30,23 +30,55 @@ int main() {
 
     net.use(mse, mse_prime);
 
-    // // Train the network
-    // net.fit(x_train, y_train, 10000, 0.1);
+    // // // Train the network
+    net.fit(x_train, y_train, 50, 0.1);
 
-    // // Test the network
-    // for (size_t i = 0; i < x_train.size(); ++i) {
-    //     vector<double> predicted = net.predict(x_train[i]);
-    //     cout << "Input: (" << x_train[i][0] << ", " << x_train[i][1] << ") Output: " << predicted[0] << endl;
+    // // // Test the network
+    for (size_t i = 0; i < x_train.size(); ++i) {
+        vector<double> predicted = net.predict(x_train[i]);
+        cout << "Input: (" << x_train[i][0] << ", " << x_train[i][1] << ") Output: " << predicted[0] << endl;
+    }
+
+
+    // test fc2 layer with sample input, output and print the weights
+    // FCLayer* fc2 = new FCLayer(2, 3);
+    // vector<double> input = {1, 1};
+    // vector<double> output = fc2->forwardPropagation(input);
+    // // loop through input nad print 
+    // cout << "Input: " << endl;
+    // for (size_t i = 0; i < input.size(); ++i) {
+    //     cout << input[i] << " ";
+    // }
+    // cout << endl;
+    // cout << "Output: " << endl;
+    // for (size_t i = 0; i < output.size(); ++i) {
+    //     cout << output[i] << " ";
+    // }
+    // cout << endl;
+    // cout << "Weights: " << endl;
+    // for (size_t i = 0; i < fc2->weights.size(); ++i) {
+    //     for (size_t j = 0; j < fc2->weights[0].size(); ++j) {
+    //         cout << fc2->weights[i][j] << " ";
+    //     }
+    //     cout << endl;
     // }
 
-    // test teh activation layer with tanh 
-    act1->forwardPropagation(x_train[3]);
-    act1->backwardPropagation(y_train[3], 0.1);
-    cout << "Input: (" << x_train[0][0] << ", " << x_train[0][1] << ") Output: " << act1->forwardPropagation(x_train[0])[0] << endl;
-    cout << "Input: (" << x_train[0][0] << ", " << x_train[0][1] << ") Output: " << act1->backwardPropagation(y_train[0], 0.1)[0] << endl;
+    // test activation layer with sample input, output and print the weights
+    // ActivationLayer* act1 = new ActivationLayer(tanh_activation, tanh_prime);
+    // vector<double> input = {1, 1};
+    // vector<double> output = act1->forwardPropagation(input);
+    // // loop through input nad print
+    // cout << "Input: " << endl;
+    // for (size_t i = 0; i < input.size(); ++i) {
+    //     cout << input[i] << " ";
+    // }
+    // cout << endl;
+    // cout << "Output: " << endl;
+    // for (size_t i = 0; i < output.size(); ++i) {
+    //     cout << output[i] << " ";
+    // }
+    // cout << endl;
 
+    // test mse and mse prime
 
-    // net.add_activation(tanh, tanh_prime);
-    // net.add(FCLayer(3, 1));
-    // net.add_activation(tanh, tanh_prime);
 }
