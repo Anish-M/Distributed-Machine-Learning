@@ -83,8 +83,13 @@ int runGenerated() {
 
     network.add(new FCLayer(n_features, 5));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(5, 1));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(5, 8));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(relu, relu_prime)); // Add activation layer with sigmoid
+    network.add(new FCLayer(8, 4));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(sigmoid, sigmoid_prime)); // Add activation layer with sigmoid
+    network.add(new FCLayer(4, 1));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime)); // Add activation layer with sigmoid
+
 
     network.use(mse, mse_prime);     // Use mean squared error loss
     network.fit(x_train, y_train, 50, 0.01);
