@@ -17,9 +17,12 @@ double max_element(const vector<double>& x) {
 // Activation function and its derivative
 vector<double> tanh_activation(const vector<double>& x) {
     vector<double> result;
+    cout << "inside tanh" << endl;
     for (double value : x) {
+        cout << value << endl;
         result.push_back(tanh(value));
     }
+    cout <<"OUTSIDE tanh" << endl << endl;
     return result;
 }
 

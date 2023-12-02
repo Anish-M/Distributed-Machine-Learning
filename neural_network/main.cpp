@@ -21,7 +21,7 @@ int main() {
     int n_samples, n_features, n_classes;
     n_samples = 10;
     n_features = 5;
-    n_classes = 2;
+    n_classes = 1;
 
     // Read x_train the first line of the file is 'X' folllowed by n_samples lines of n_features
     string s;
@@ -63,19 +63,22 @@ int main() {
     // print the x_train and y_train size
     cout << "x_train size: " << x_train.size() << endl;
     cout << "y_train size: " << y_train.size() << endl;
-    // print the first x_train and y_train
-    cout << "x_train[0]: ";
-    for (int i = 0; i < x_train[0].size(); i++) {
-        cout << x_train[0][i] << " ";
+    // print out all of x_train
+    cout << "x_train: " << endl;
+    for (int i = 0; i < x_train.size(); i++) {
+        for (int j = 0; j < x_train[i].size(); j++) {
+            cout << x_train[i][j] << " ";
+        }
+        cout << endl;
     }
-    cout << endl;
-    cout << "y_train[0]: ";
-    for (int i = 0; i < y_train[0].size(); i++) {
-        cout << y_train[0][i] << " ";
-    }
-    cout << endl;
-
-    
+    // print out all of y_train
+    cout << "y_train: " << endl;
+    for (int i = 0; i < y_train.size(); i++) {
+        for (int j = 0; j < y_train[i].size(); j++) {
+            cout << y_train[i][j] << " ";
+        }
+        cout << endl;
+    } 
 
     Network net;
 
@@ -95,20 +98,28 @@ int main() {
     // net.add(FCLayer(250, 2))
     // net.add(ActivationLayer(softmax, softmax_prime))
 
-    Layer* fc1 = new FCLayer(1000, 7500);
+    // Layer* fc1 = new FCLayer(1000, 7500);
+    // Layer* act1 = new ActivationLayer(tanh_activation, tanh_prime);
+    // Layer* fc2 = new FCLayer(7500, 5000);
+    // Layer* act2 = new ActivationLayer(tanh_activation, tanh_prime);
+    // Layer* fc3 = new FCLayer(5000, 2500);
+    // Layer* act3 = new ActivationLayer(tanh_activation, tanh_prime);
+    // Layer* fc4 = new FCLayer(2500, 1000);
+    // Layer* act4 = new ActivationLayer(tanh_activation, tanh_prime);
+    // Layer* fc5 = new FCLayer(1000, 500);
+    // Layer* act5 = new ActivationLayer(tanh_activation, tanh_prime);
+    // Layer* fc6 = new FCLayer(500, 250);
+    // Layer* act6 = new ActivationLayer(tanh_activation, tanh_prime);
+    // Layer* fc7 = new FCLayer(250, 2);
+    // Layer* act7 = new ActivationLayer(softmax_activation, softmax_prime);
+
+
+    Layer* fc1 = new FCLayer(5, 4);
     Layer* act1 = new ActivationLayer(tanh_activation, tanh_prime);
-    Layer* fc2 = new FCLayer(7500, 5000);
+    Layer* fc2 = new FCLayer(4, 3);
     Layer* act2 = new ActivationLayer(tanh_activation, tanh_prime);
-    Layer* fc3 = new FCLayer(5000, 2500);
+    Layer* fc3 = new FCLayer(3, 1);
     Layer* act3 = new ActivationLayer(tanh_activation, tanh_prime);
-    Layer* fc4 = new FCLayer(2500, 1000);
-    Layer* act4 = new ActivationLayer(tanh_activation, tanh_prime);
-    Layer* fc5 = new FCLayer(1000, 500);
-    Layer* act5 = new ActivationLayer(tanh_activation, tanh_prime);
-    Layer* fc6 = new FCLayer(500, 250);
-    Layer* act6 = new ActivationLayer(tanh_activation, tanh_prime);
-    Layer* fc7 = new FCLayer(250, 2);
-    Layer* act7 = new ActivationLayer(softmax_activation, softmax_prime);
 
     net.add(fc1);
     net.add(act1);
@@ -116,14 +127,10 @@ int main() {
     net.add(act2);
     net.add(fc3);
     net.add(act3);
-    net.add(fc4);
-    net.add(act4);
-    net.add(fc5);
-    net.add(act5);
-    net.add(fc6);
-    net.add(act6);
-    net.add(fc7);
-    net.add(act7);
+
+
+    // vector<vector<double>> x_train = {{0, 0}, {0, 1}, {1, 0}, {1, 1}, {9, 9}, {9, 8}, {8, 9}, {8, 8}};
+    // vector<vector<double>> y_train = {{0}, {0}, {0}, {0}, {1}, {1}, {1}, {1}};
 
     net.use(categorical_cross_entropy, categorical_cross_entropy_prime);
 
