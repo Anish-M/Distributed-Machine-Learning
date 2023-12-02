@@ -45,17 +45,21 @@ private:
                 vector<double> output = x_train[j];
                 for (Layer* layer : layers) {
                     output = layer->forwardPropagation(output);
+                    cout << "forward propagation completed" << endl;
                 }
 
 
                 // Compute loss (for display purpose only)
                 err += loss(y_train[j], output);
 
+                cout << "error computed" << endl;
+
                 // Backward propagation
                 vector<double> error = lossPrime(y_train[j], output);
                 for (auto layerIter = layers.rbegin(); layerIter != layers.rend(); ++layerIter) {
                     Layer* layer = *layerIter;
                     error = layer->backwardPropagation(error, learning_rate);
+                    cout << "backward propagation completed" << endl;
                 }
 
                 // loop through and print y_train[j]
@@ -64,6 +68,7 @@ private:
 
                 // cout << "output: " << output << endl;
                 // cout << "error: " << error << endl;
+                cout << "COMPLETED SAMPLE " << j << endl;
             }
 
             // Calculate average error on all samples
