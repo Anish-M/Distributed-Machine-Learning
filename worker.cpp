@@ -8,6 +8,7 @@
 #include <netdb.h> 
 #include <time.h>
 #include <thread>
+
 using namespace std;
 
 int sockfd, portno, n;
@@ -110,26 +111,24 @@ int main(int argc, char *argv[])
 
 
 int runSequential(vector<vector<double>>& x_train, vector<vector<double>>& y_train) {
-    // Create network
     
-     // TODO: create network
     Network network;  
+    // TODO: create network with read in weights and biases
 
     int num_epochs = 50;
 
-    // add layers and shit  
-
     for(int x = 0; x < 50; x++) {
         network.fitOneEpoch(x_train, y_train, 0.1);
+        
+        string weightsToSend = getWeights()
 
-        // wait for the network
-        // send network back
+        // TODO: send that shit in to the master
 
-        // read in new net
+        // TODO: read in new net
     }
 
 
-    
+    // network done!!
 
     return 0;
 
@@ -162,7 +161,7 @@ int runParallel(vector<vector<double>>& x_train, vector<vector<double>>& y_train
     // Create threads and run runParallelHelper
     vector<thread> threads;
     for (int i = 0; i < n_threads; ++i) {
-        threads.push_back(thread(runParallelHelper, ref(x_train_parts[i]), ref(y_train_parts[i])));
+        threads.push_back(thread(runParallelHelper, ref(x_train_parts[i]), ref(y_train_parts[i]), network));
     }
 
     // Wait for all threads to finish
@@ -171,6 +170,9 @@ int runParallel(vector<vector<double>>& x_train, vector<vector<double>>& y_train
             th.join();
         }
     }
+
+    // net trained!!!
+    cout << "Network trained" << endl;
 
     return 0;
 }
@@ -184,12 +186,15 @@ int runParallelHelper(vector<vector<double>>& thread_x_train, vector<vector<doub
     // add layers and shit  
 
     for(int x = 0; x < 50; x++) {
-        network.fitOneEpoch(thread_x_train, thread_y_train, 0.1);
+        network.fitOneEpoch(x_train, y_train, 0.1);
+        
+        string weightsToSend = getWeights()
+        // barrier for threads
+        // aggregate all their weights
+        // send those over
 
-        // wait for the network
-        // send network back
+        // TODO: send that shit in to the master
 
-        // read in new net
-        // set new net
+        // TODO: read in new net
     }
 }
