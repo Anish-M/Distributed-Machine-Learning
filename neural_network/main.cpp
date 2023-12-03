@@ -20,6 +20,9 @@
 #include <thread>
 #include <vector>
 #include <pthread.h>
+#include <utility>
+#include <iostream>
+
 
 using namespace std;
 
@@ -41,23 +44,12 @@ vector<thread> client_threads;
 int n_clients = 1;
 // ######################################################
 
-// ################ SOCKET PROGRAMMING ATTRIBUTES ########################
-int sockfd, portno;
-socklen_t clilen;
-char buffer[256];
-struct sockaddr_in serv_addr, cli_addr;
-int n;
+// ################# NEURAL NETWORK ATTRIBUTES ############################
+int n_samples, n_features, n_classes;
+vector<vector<double>> x_train;
+vector<vector<double>> y_train;
+// ########################################################################
 
-vector<int> newsockfds;
-vector<thread> threads;
-
-// mapping of sockets to ip addresses
-vector<string> ip_addrs;
-
-vector<thread> client_threads;
-
-int n_clients = 1;
-// ######################################################
 
 int runGenerated() {
     vector<vector<double>> x_train;
@@ -148,23 +140,54 @@ int runExample() {
     // Example usage
     Network network;
 
+
+
+    network.add(new FCLayer(n_features, 18000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(18000, 20000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(20000, 25000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(25000, 17000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(17000, 8000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(8000, 3000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(3000, 1000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(1000, 500));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(500, 1));  // Add fully connected layer with 3 inputs and 4 outputs
+
+
+    network.use(mse, mse_prime);     // Use mean squared error loss
+
+    // Train and predict
+    vector<vector<double>> x_train = {{0, 0, 3}, {0, 1, 2}, {1, 0, 1}, {1, 1, 0}, {9, 9, 8}, {9, 8, 7}, {8, 9, 6}, {8, 8, 7}};
+    vector<vector<double>> y_train = {{0}, {0}, {0}, {0}, {1}, {1}, {1}, {1}};
+    network.fit(x_train, y_train, 50, 0.01);
+    vector<double> prediction = network.predict({9, 9, 9});
+    for (double val : prediction) cout << val << " ";
+    cout << endl;
+
+    return 0;
+}
+
+pair<vector<vector<double>>, vector<vector<double>>> readDataMaster(int n_samples, int n_features, int n_classes, const char* filename) {
     vector<vector<double>> x_train;
     vector<vector<double>> y_train;
 
     // Read x_train and y_train from file data/generated8000_2_16000.txt
     // n_samples/n_features/n_classes
     // // freopen("../data/generated8000_2_16000.txt", "r", stdin);
-    int n_samples, n_features, n_classes;
-    n_samples = 8000;
-    n_features = 16000;
-    n_classes = 2;
 
     // Read x_train the first line of the file is 'X' folllowed by n_samples lines of n_features
     string s;
     
     // the first line is 'X'
     // open the file ../data/generated8000_2_16000.txt with cin
-    freopen("../data/generated_8000_2_16000.txt", "r", stdin);
+    freopen(filename, "r", stdin);
     // read the first line of the file
     cin >> s;
     cout << s << endl;
@@ -200,51 +223,12 @@ int runExample() {
     cout << "x_train size: " << x_train.size() << endl;
     cout << "y_train size: " << y_train.size() << endl;
 
-
-    network.add(new FCLayer(n_features, 18000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(18000, 20000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(20000, 25000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(25000, 17000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(17000, 8000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(8000, 3000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(3000, 1000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(1000, 500));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(500, 1));  // Add fully connected layer with 3 inputs and 4 outputs
-
-
-    network.use(mse, mse_prime);     // Use mean squared error loss
-
-    // Train and predict
-    vector<vector<double>> x_train = {{0, 0, 3}, {0, 1, 2}, {1, 0, 1}, {1, 1, 0}, {9, 9, 8}, {9, 8, 7}, {8, 9, 6}, {8, 8, 7}};
-    vector<vector<double>> y_train = {{0}, {0}, {0}, {0}, {1}, {1}, {1}, {1}};
-    network.fit(x_train, y_train, 50, 0.01);
-    vector<double> prediction = network.predict({9, 9, 9});
-    for (double val : prediction) cout << val << " ";
-    cout << endl;
-
-    return 0;
+    return make_pair(x_train, y_train);
 }
 
-
-int splitDataMaster(int numWorkers) {
-    
-    // Read x_train and y_train from file
-    vector<vector<double>> x_train;
-    vector<vector<double>> y_train;
-
-    // Read x_train and y_train from file 
-    int n_samples, n_features, n_classes;
+vector<vector<int>> splitDataMaster(int numWorkers) {
+    int n_samples;
     n_samples = 10;
-    n_features = 5;
-    n_classes = 1;
     string s;
 
     // randomly shuffle the indices, but seed it so that it is the same every time
@@ -270,67 +254,75 @@ int splitDataMaster(int numWorkers) {
         }
         cout << endl;
     }
+
+    return chunks;
 }
 
 
-int readInDataWorker(int numWorkers) {
+
+
+// int readInDataWorker(int numWorkers) {
     
-    // Read x_train and y_train from file
-    vector<vector<double>> x_train;
-    vector<vector<double>> y_train;
+//     // Read x_train and y_train from file
+//     vector<vector<double>> x_train;
+//     vector<vector<double>> y_train;
 
-    // Read x_train and y_train from file 
-    int n_samples, n_features, n_classes;
-    n_samples = 10;
-    n_features = 5;
-    n_classes = 1;
-    string s;
+//     // Read x_train and y_train from file 
+//     int n_samples, n_features, n_classes;
+//     n_samples = 10;
+//     n_features = 5;
+//     n_classes = 1;
+//     string s;
     
-    // the first line is 'X'
-    freopen("../data/generated_10_2_5.txt", "r", stdin);
+//     // the first line is 'X'
+//     freopen("../data/generated_10_2_5.txt", "r", stdin);
 
-    // read in X train
-    cin >> s;
-    cout << s << endl;
-    for (int i = 0; i < n_samples; i++) {
-        vector<double> x;
-        for (int j = 0; j < n_features; j++) {
-            double temp;
-            cin >> temp;
-            x.push_back(temp);
-        }
-        x_train.push_back(x);
-    }
+//     // read in X train
+//     cin >> s;
+//     cout << s << endl;
+//     for (int i = 0; i < n_samples; i++) {
+//         vector<double> x;
+//         for (int j = 0; j < n_features; j++) {
+//             double temp;
+//             cin >> temp;
+//             x.push_back(temp);
+//         }
+//         x_train.push_back(x);
+//     }
 
-    // read in Y train
-    cin >> s;
-    cout << s << endl;
-    for (int i = 0; i < n_samples; i++) {
-        vector<double> y;
-        for (int j = 0; j < n_classes; j++) {
-            double temp;
-            cin >> temp;
-            y.push_back(temp);
-        }
-        y_train.push_back(y);
-    }
+//     // read in Y train
+//     cin >> s;
+//     cout << s << endl;
+//     for (int i = 0; i < n_samples; i++) {
+//         vector<double> y;
+//         for (int j = 0; j < n_classes; j++) {
+//             double temp;
+//             cin >> temp;
+//             y.push_back(temp);
+//         }
+//         y_train.push_back(y);
+//     }
 
-    string indices_to_read;
+//     string indices_to_read;
 
-    // make an my_x_train and my_y_train including each index in the indices_to_read
-    vector<vector<double>> my_x_train;
-    vector<vector<double>> my_y_train;
+//     // make an my_x_train and my_y_train including each index in the indices_to_read
+//     vector<vector<double>> my_x_train;
+//     vector<vector<double>> my_y_train;
 
-    // loop through the indices_to_read and add the corresponding x_train and y_train to my_x_train and my_y_train
-    for (int i = 0; i < indices_to_read.size(); i++) {
-        int index = stoi(indices_to_read[i]);
-        my_x_train.push_back(x_train[index]);
-        my_y_train.push_back(y_train[index]);
-    }
+//     // loop through the indices_to_read and add the corresponding x_train and y_train to my_x_train and my_y_train
+//     for (int i = 0; i < indices_to_read.size(); i++) {
+//         int index = stoi(indices_to_read[i]);
+//         my_x_train.push_back(x_train[index]);
+//         my_y_train.push_back(y_train[index]);
+//     }
 
-    // print out the my_x_train and my_y_train's dimensions
-    cout << "my_x_train size: " << my_x_train.size() << endl;
-    cout << "my_y_train size: " << my_y_train.size() << endl;
+//     // print out the my_x_train and my_y_train's dimensions
+//     cout << "my_x_train size: " << my_x_train.size() << endl;
+//     cout << "my_y_train size: " << my_y_train.size() << endl;
+// }
+
+int main() {
+    
 }
 
 
