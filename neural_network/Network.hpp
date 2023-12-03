@@ -63,6 +63,33 @@ public:
                  << " time for epoch=" << time_for_epoch << "s" << endl;
         }
     }
+
+    void fitOneEpoch(const vector<vector<double>>& x_train, const vector<vector<double>>& y_train, double learning_rate) {
+        double err = 0;
+        auto start_time_epoch = clock();
+        for (size_t j = 0; j < x_train.size(); ++j) {
+            auto start_time = clock();
+            vector<double> output = x_train[j];
+            for (Layer* layer : layers) {
+                output = layer->forward_propagation(output);
+            }
+
+            err += loss(y_train[j], output);
+
+            vector<double> error = loss_prime(y_train[j], output);
+            for (auto it = layers.rbegin(); it != layers.rend(); ++it) {
+                error = (*it)->backward_propagation(error, learning_rate);
+            }
+
+            // cout << "Epoch " << i + 1 << "/" << epochs << " Sample " << j + 1 << "/" << x_train.size()
+            //      << " Time: " << double(clock() - start_time) / CLOCKS_PER_SEC << "s" << endl;
+        }
+        err /= x_train.size();
+        double time_for_epoch = double(clock() - start_time_epoch) / CLOCKS_PER_SEC;
+        cout << "Epoch " << i + 1 << "/" << epochs << " error=" << err
+                << " time for epoch=" << time_for_epoch << "s" << endl;
+    }
+
     string getWeights() {
         string weights = "weights:\n";
         for (Layer* layer : layers) {

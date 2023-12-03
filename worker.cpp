@@ -107,3 +107,89 @@ int main(int argc, char *argv[])
     
     return 0;
 }
+
+
+int runSequential(vector<vector<double>>& x_train, vector<vector<double>>& y_train) {
+    // Create network
+    
+     // TODO: create network
+    Network network;  
+
+    int num_epochs = 50;
+
+    // add layers and shit  
+
+    for(int x = 0; x < 50; x++) {
+        network.fitOneEpoch(x_train, y_train, 0.1);
+
+        // wait for the network
+        // send network back
+
+        // read in new net
+    }
+
+
+    
+
+    return 0;
+
+}
+
+int runParallel(vector<vector<double>>& x_train, vector<vector<double>>& y_train) {
+    // use 
+    int n_threads = 4;
+
+    // TODO: create network
+    Network network;    
+
+    network.fitOneEpoch(x_train, y_train, 0.1);
+
+    // partition data
+    vector<vector<vector<double>>> x_train_parts(n_threads);
+    vector<vector<vector<double>>> y_train_parts(n_threads);
+
+    size_t chunk_size = x_train.size() / n_threads;
+    size_t remainder = x_train.size() % n_threads;
+
+    for (int i = 0; i < n_threads; ++i) {
+        size_t start_idx = i * chunk_size;
+        size_t end_idx = (i + 1) * chunk_size + (i == n_threads - 1 ? remainder : 0);
+
+        x_train_parts[i] = vector<vector<double>>(x_train.begin() + start_idx, x_train.begin() + end_idx);
+        y_train_parts[i] = vector<vector<double>>(y_train.begin() + start_idx, y_train.begin() + end_idx);
+    }
+
+    // Create threads and run runParallelHelper
+    vector<thread> threads;
+    for (int i = 0; i < n_threads; ++i) {
+        threads.push_back(thread(runParallelHelper, ref(x_train_parts[i]), ref(y_train_parts[i])));
+    }
+
+    // Wait for all threads to finish
+    for (auto& th : threads) {
+        if (th.joinable()) {
+            th.join();
+        }
+    }
+
+    return 0;
+}
+
+int runParallelHelper(vector<vector<double>>& thread_x_train, vector<vector<double>>& thread_y_train, Network network) {
+    
+    Network network;  
+
+    int num_epochs = 50;
+
+    // add layers and shit  
+
+    for(int x = 0; x < 50; x++) {
+        network.fitOneEpoch(thread_x_train, thread_y_train, 0.1);
+
+        // wait for the network
+        // send network back
+
+        // read in new net
+        // set new net
+    }
+}
