@@ -8,25 +8,41 @@
 #include "FCLayer.hpp"
 #include "ActivationLayer.hpp"
 #include "Activations.hpp"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h> 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <time.h>
+#include <thread>
+#include <vector>
 
 using namespace std;
+
+// ################ SOCKET PROGRAMMING ATTRIBUTES ########################
+int sockfd, portno;
+socklen_t clilen;
+char buffer[256];
+struct sockaddr_in serv_addr, cli_addr;
+int n;
+
+vector<int> newsockfds;
+vector<thread> threads;
+
+// mapping of sockets to ip addresses
+vector<string> ip_addrs;
+
+vector<thread> client_threads;
+
+int n_clients = 1;
+// ######################################################
 
 int main() {
     // Example usage
     Network network;
-    // network.add(new FCLayer(3, 5));  // Add fully connected layer with 3 inputs and 4 outputs
-    // network.add(new ActivationLayer(tanh_1, tanh_prime));
-    // network.add(new FCLayer(5, 1));  // Add fully connected layer with 3 inputs and 4 outputs
-    // network.add(new ActivationLayer(tanh_1, tanh_prime)); // Add activation layer with sigmoid
-    // network.use(mse, mse_prime);     // Use mean squared error loss
-
-    // // Train and predict
-    // vector<vector<double>> x_train = {{0, 0, 3}, {0, 1, 2}, {1, 0, 1}, {1, 1, 0}, {9, 9, 8}, {9, 8, 7}, {8, 9, 6}, {8, 8, 7}};
-    // vector<vector<double>> y_train = {{0}, {0}, {0}, {0}, {1}, {1}, {1}, {1}};
-    // network.fit(x_train, y_train, 50, 0.01);
-    // vector<double> prediction = network.predict({9, 9, 9});
-    // for (double val : prediction) cout << val << " ";
-    // cout << endl;
 
     vector<vector<double>> x_train;
     vector<vector<double>> y_train;
@@ -35,16 +51,16 @@ int main() {
     // n_samples/n_features/n_classes
     // // freopen("../data/generated8000_2_16000.txt", "r", stdin);
     int n_samples, n_features, n_classes;
-    n_samples = 10;
-    n_features = 5;
-    n_classes = 1;
+    n_samples = 8000;
+    n_features = 16000;
+    n_classes = 2;
 
     // Read x_train the first line of the file is 'X' folllowed by n_samples lines of n_features
     string s;
     
     // the first line is 'X'
     // open the file ../data/generated8000_2_16000.txt with cin
-    freopen("../data/generated_10_2_5.txt", "r", stdin);
+    freopen("../data/generated_8000_2_16000.txt", "r", stdin);
     // read the first line of the file
     cin >> s;
     cout << s << endl;
@@ -79,31 +95,28 @@ int main() {
     // print the x_train and y_train size
     cout << "x_train size: " << x_train.size() << endl;
     cout << "y_train size: " << y_train.size() << endl;
-    // print out all of x_train
-    cout << "x_train: " << endl;
-    for (int i = 0; i < x_train.size(); i++) {
-        for (int j = 0; j < x_train[i].size(); j++) {
-            cout << x_train[i][j] << " ";
-        }
-        cout << endl;
-    }
-    // print out all of y_train
-    cout << "y_train: " << endl;
-    for (int i = 0; i < y_train.size(); i++) {
-        for (int j = 0; j < y_train[i].size(); j++) {
-            cout << y_train[i][j] << " ";
-        }
-        cout << endl;
-    }
 
-    network.add(new FCLayer(n_features, 5));  // Add fully connected layer with 3 inputs and 4 outputs
+
+    network.add(new FCLayer(n_features, 18000));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(5, 3));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(18000, 20000));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(3, 1));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime)); // Add activation layer with sigmoid
+    network.add(new FCLayer(20000, 25000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(25000, 17000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(17000, 8000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(8000, 3000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(3000, 1000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(1000, 500));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new FCLayer(500, 1));  // Add fully connected layer with 3 inputs and 4 outputs
+
 
     network.use(mse, mse_prime);     // Use mean squared error loss
-    network.fit(x_train, y_train, 10000, 0.001);
+    network.fit(x_train, y_train, 10, 0.001);
     return 0;
 }

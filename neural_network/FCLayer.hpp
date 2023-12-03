@@ -22,6 +22,9 @@ public:
             b = (rand() / double(RAND_MAX)) - 0.5;
     }
 
+    FCLayer(const vector<vector<double>>& weights, const vector<double>& bias) : weights(weights), bias(bias) {}
+
+
     vector<double> forward_propagation(const vector<double>& input) override {
         vector<double> output;
         for (size_t i = 0; i < bias.size(); ++i) {

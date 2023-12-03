@@ -18,33 +18,41 @@ void error(const char *msg)
     perror(msg);
 }
 
-int main(int argc, char *argv[])
-{
-     int sockfd, portno;
-     socklen_t clilen;
-     char buffer[256];
-     struct sockaddr_in serv_addr, cli_addr;
-     int n;
-     if (argc < 2) {
-         fprintf(stderr,"ERROR, no port provided\n");
-         exit(1);
-     }
+// ################ SOCKET PROGRAMMING ATTRIBUTES ########################
+int sockfd, portno;
+socklen_t clilen;
+char buffer[256];
+struct sockaddr_in serv_addr, cli_addr;
+int n;
+
+vector<int> newsockfds;
+vector<thread> threads;
+
+// mapping of sockets to ip addresses
+vector<string> ip_addrs;
+
+vector<thread> client_threads;
+
+int n_clients = 1;
+// ######################################################
 
 
-     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-     if (sockfd < 0) 
-        error("ERROR opening socket");
-	else 
+void open_socket() {
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) {
+		error("ERROR opening socket");
+	} else {
 		printf("Socket opened successfully\n");
+	}
+}
 
-     bzero((char *) &serv_addr, sizeof(serv_addr));
-     portno = atoi(argv[1]);
-     serv_addr.sin_family = AF_INET;
-     serv_addr.sin_addr.s_addr = INADDR_ANY;
-     serv_addr.sin_port = htons(portno);
+void bind_socket() {
+	bzero((char *) &serv_addr, sizeof(serv_addr));
+	portno = 8000;
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_addr.s_addr = INADDR_ANY;
+	serv_addr.sin_port = htons(portno);
 
-
-	// change this to try every port from 8000 to 8005 until the bind is successful
 	for (int i = 0; i < 5; i++) {
 		if (bind(sockfd, (struct sockaddr *) &serv_addr,
 			  sizeof(serv_addr)) < 0) {
@@ -56,31 +64,9 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
+}
 
-    //  listen(sockfd,5);
-    //  clilen = sizeof(cli_addr);
-    //  newsockfd = accept(sockfd, 
-    //              (struct sockaddr *) &cli_addr, 
-    //              &clilen);
-    //  if (newsockfd < 0) 
-    //       error("ERROR on accept");
-	// else
-	// 	printf("Socket accepted successfully from client %s\n", inet_ntoa(cli_addr.sin_addr));
-
-    //  bzero(buffer,256);
-    //  n = read(newsockfd,buffer,255);
-    //  if (n < 0) 
-	//  	error("ERROR reading from socket");
-	// else
-	// 	printf("Here is the message: %s\n",buffer);
-	
-	int n_clients = 2;
-	vector<int> newsockfds;
-	vector<thread> threads;
-
-	// mapping of sockets to ip addresses
-	vector<string> ip_addrs;
-
+void map_sockets_to_ip_addrs() {
 	listen(sockfd, n_clients);
 	clilen = sizeof(cli_addr);
 	for (int i = 0; i < n_clients; i++) {
@@ -93,9 +79,10 @@ int main(int argc, char *argv[])
 
 		}
 	}
+}
 
+void create_client_threads() {
 	// now all the client connections have been received, create a thread for each client to continuously read from the socket
-	vector<thread> client_threads;
 	for (int i = 0; i < n_clients; i++) {
 		printf("Creating thread for client %s\n", ip_addrs[i].c_str());
 		client_threads.push_back(thread([](int newsockfd, string ip_addr) {
@@ -119,30 +106,53 @@ int main(int argc, char *argv[])
 			printf("Thread exiting for client %s\n", ip_addr.c_str());
 		}, newsockfds[i], ip_addrs[i]));
 	}
+}
 
-
-	// can write to the same sockets from the main thread
-	// write ack to each client
-	for (int i = 0; i < n_clients; i++) {
-		n = write(newsockfds[i], "ack", 3);
-		if (n < 0) {
-			error("ERROR writing to socket");
-		} else {
-			printf("ack sent successfully to client %s\n", ip_addrs[i].c_str());
-		}
+void send_message_to_client(int client_index, string message) {
+	n = write(newsockfds[client_index], message.c_str(), message.length());
+	if (n < 0) {
+		error("ERROR writing to socket");
+	} else {
+		printf("Message sent successfully to client %s\n", ip_addrs[client_index].c_str());
 	}
+}
 
-
+void join_threads() {
 	printf("Waiting for threads to join\n");
 	for (int i = 0; i < n_clients; i++) {
 		client_threads[i].join();
 		printf("Thread joined for client %s\n", ip_addrs[i].c_str());
 	}
+}
 
-
-     for (int i = 0; i < n_clients; i++) {
+void close_sockets() {
+	for (int i = 0; i < n_clients; i++) {
 		close(newsockfds[i]);
 	}
-     close(sockfd);
+	close(sockfd);
+}
+int main(int argc, char *argv[])
+{
+
+    open_socket();
+
+    bind_socket();
+	
+	map_sockets_to_ip_addrs();
+
+	create_client_threads();
+
+
+	// can write to the same sockets from the main thread
+	// write ack to each client
+	for (int i = 0; i < n_clients; i++) {
+		send_message_to_client(i, "ack");
+	}
+
+
+	join_threads();
+
+	
+    close_sockets();
      return 0; 
 }
