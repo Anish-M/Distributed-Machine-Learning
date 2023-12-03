@@ -35,8 +35,8 @@ void open_socket() {
     }
 }
 
-void get_host() {
-    server = gethostbyname("clue.cs.utexas.edu");
+void get_host(char* host) {
+    server = gethostbyname(host);
     if (server == NULL) {
         fprintf(stderr,"perror, no such host\n");
         exit(0);

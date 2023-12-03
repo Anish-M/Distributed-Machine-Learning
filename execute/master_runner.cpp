@@ -279,6 +279,34 @@ int readInDataWorker(int numWorkers, string indices_to_read) {
     cout << "my_y_train size: " << my_y_train.size() << endl;
 }
 
+void create_client_threads() {
+	// now all the client connections have been received, create a thread for each client to continuously read from the socket
+	for (int i = 0; i < n_clients; i++) {
+		printf("Creating thread for client %s\n", ip_addrs[i].c_str());
+		client_threads.push_back(thread([](int newsockfd, string ip_addr) {
+			char buffer[256];
+			int n;
+			
+			while (true || buffer[0] != 113) {
+				bzero(buffer, 256);
+				n = read(newsockfd, buffer, 255);
+				if (n < 0) {
+					perror("perror reading from socket");
+				} else {
+					printf("%s: %s\n", ip_addr.c_str(), buffer);
+					if (buffer[0] == 113) {
+						printf("buffer[0] = %d\n", buffer[0]);
+						printf("Client %s has disconnected\n", ip_addr.c_str());
+						break;
+					}
+				}
+			}
+			printf("Thread exiting for client %s\n", ip_addr.c_str());
+		}, newsockfds[i], ip_addrs[i]));
+	}
+}
+
+
 int main() {
     n_samples = 10;
     n_features = 5;
@@ -291,10 +319,6 @@ int main() {
 
     vector<string> stringsToSend = getStringToSendClients(indices, n_clients);
     // print out stringsToSend
-    
-    
-
-
 
     initialize_network();
     string network_init_string = network.network_string();
@@ -302,6 +326,7 @@ int main() {
 
     // ENDED STRING INITIALIZATION
 
+    cout << "----------------------------------------" << endl;
     cout << "Starting socket programming initialization" << endl;
     open_socket();
 
@@ -313,6 +338,7 @@ int main() {
 
 
     cout << "Finished socket programming initialization" << endl;
+    cout << "----------------------------------------" << endl;
     cout << "Sending messages for network initialization" << endl;
 
     // send_thread the network_init_string to all the clients
@@ -322,15 +348,15 @@ int main() {
 
 
     cout << "Finished sending messages for network initialization" << endl;
+    cout << "----------------------------------------" << endl;
 
     cout << "Sending the work indices to the clients" << endl;
         for (int i = 0; i < stringsToSend.size(); i++) {
-        cout << "Sending work to Worker " << i << ": " << stringsToSend[i] << endl;
+        cout << "Sending work to Worker " << i << endl;
         send_message_to_client(i, stringsToSend[i]);
     }
     cout << "Finished sending the work indices to the clients" << endl;
-    
-    join_threads();
+    cout << "----------------------------------------" << endl;
 
 
     // this is for DATA PARALLELISM
@@ -351,6 +377,8 @@ int main() {
         string sendNewNet = network.network_string();
         // send that string back
     }
+
+    join_threads();
     return 0;
 }
 

@@ -70,7 +70,6 @@ void map_sockets_to_ip_addrs() {
 	listen(sockfd, n_clients);
 	clilen = sizeof(cli_addr);
 	cout << "Waiting for " << n_clients << " clients to connect" << endl;
-	cout << "that's kinda gay" << endl;
 	for (int i = 0; i < n_clients; i++) {
 		newsockfds.push_back(accept(sockfd, (struct sockaddr *) &cli_addr, &clilen));
 		if (newsockfds[i] < 0) {
@@ -83,32 +82,7 @@ void map_sockets_to_ip_addrs() {
 	}
 }
 
-void create_client_threads() {
-	// now all the client connections have been received, create a thread for each client to continuously read from the socket
-	for (int i = 0; i < n_clients; i++) {
-		printf("Creating thread for client %s\n", ip_addrs[i].c_str());
-		client_threads.push_back(thread([](int newsockfd, string ip_addr) {
-			char buffer[256];
-			int n;
-			
-			while (true || buffer[0] != 113) {
-				bzero(buffer, 256);
-				n = read(newsockfd, buffer, 255);
-				if (n < 0) {
-					perror("perror reading from socket");
-				} else {
-					printf("%s: %s\n", ip_addr.c_str(), buffer);
-					if (buffer[0] == 113) {
-						printf("buffer[0] = %d\n", buffer[0]);
-						printf("Client %s has disconnected\n", ip_addr.c_str());
-						break;
-					}
-				}
-			}
-			printf("Thread exiting for client %s\n", ip_addr.c_str());
-		}, newsockfds[i], ip_addrs[i]));
-	}
-}
+
 
 void send_message_to_client(int client_index, string message) {
 	n = write(newsockfds[client_index], message.c_str(), message.length());

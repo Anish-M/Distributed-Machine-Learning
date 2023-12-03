@@ -29,13 +29,16 @@
 #include <sstream>
 
 // ################# NEURAL NETWORK ATTRIBUTES ############################
+// network attributes
 int n_samples, n_features, n_classes;
+
 // my x_train and y_train
 vector<vector<double>> my_x_train;
 vector<vector<double>> my_y_train;
 // read in the entire data
 vector<vector<double>> x_train;
 vector<vector<double>> y_train;
+
 Network network;
 bool phase_init = false;
 bool work_index_init = false;
@@ -166,7 +169,7 @@ void get_my_data_points()
     {
         // add the x_train and y_train data points to worker_x_train and worker_y_train
         my_x_train.push_back(x_train[data_points[i]]);
-        my_x_train.push_back(y_train[data_points[i]]);
+        my_y_train.push_back(y_train[data_points[i]]);
     }
 }
 
@@ -237,9 +240,10 @@ void readInFile() {
     n_features = 5;
     n_classes = 2;
     // READ IN THE DATA
-    string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_features) + "_" + to_string(n_classes) + ".txt";
+    string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_classes) + "_" + to_string(n_features) + ".txt";
     const char * c = file_name.c_str();
     freopen(c, "r", stdin);
+    cout << "Reading in file: " << file_name << endl;
     // read the first line of the file
     string s;
     cin >> s;
@@ -278,10 +282,12 @@ int main(int argc, char *argv[])
 {
 
     end_thread = false;
-    port = 8002;
+    port = 8000;
 
     open_socket();
-    get_host();
+    string host_name = "hydra.cs.utexas.edu";
+    char *host = &host_name[0];
+    get_host(host);
     establish_connection();
     create_reading_thread();
 
@@ -289,20 +295,22 @@ int main(int argc, char *argv[])
         sleep(1);
     }
 
-    cout << "Network string: " << network_string << endl;
-    cout << "Work index string: " << work_index_string << endl;
-    cout << "Init complete. Starting training" << endl;
+    cout << "Network string created. Initializing network..." << endl;
+    cout << "Work index string created. Initializing work index..." << endl;
+    cout << "Network Initialization complete. Starting training..." << endl;
+    cout << "-----------------------------------------------" << endl;
+    readInFile();
+    cout << "Read in file complete." << endl;
+    cout << "-----------------------------------------------" << endl;
+    // print out data points
+    get_my_data_points();
+    cout << "Got my data points." << endl;
+    // print out size of my_x_train and my_y_train
+    cout << "my_x_train size: " << my_x_train.size() << " original x_train size: " << x_train.size() << endl;
+    cout << "my_y_train size: " << my_y_train.size() << " original y_train size: " << y_train.size() << endl;
+    cout << "-----------------------------------------------" << endl;
 
-    //readInFile();
-
-    // get_my_data_points();
     
-
-
-    // runSequential_data();
-
-    send_results();
-
     join_thread();
 
     return 0;
