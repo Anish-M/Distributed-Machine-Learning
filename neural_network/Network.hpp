@@ -86,8 +86,7 @@ public:
         }
         err /= x_train.size();
         double time_for_epoch = double(clock() - start_time_epoch) / CLOCKS_PER_SEC;
-        cout << "Epoch " << i + 1 << "/" << epochs << " error=" << err
-                << " time for epoch=" << time_for_epoch << "s" << endl;
+        cout << " time for epoch=" << time_for_epoch << "s" << endl;
     }
 
     string getWeights() {

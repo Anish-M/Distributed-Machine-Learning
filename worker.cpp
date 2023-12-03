@@ -8,6 +8,10 @@
 #include <netdb.h> 
 #include <time.h>
 #include <thread>
+#include <vector>
+#include "neural_network/Network.hpp"
+
+
 
 using namespace std;
 
@@ -120,7 +124,7 @@ int runSequential(vector<vector<double>>& x_train, vector<vector<double>>& y_tra
     for(int x = 0; x < 50; x++) {
         network.fitOneEpoch(x_train, y_train, 0.1);
         
-        string weightsToSend = getWeights()
+        string weightsToSend = network.getWeights();
 
         // TODO: send that shit in to the master
 
@@ -132,6 +136,28 @@ int runSequential(vector<vector<double>>& x_train, vector<vector<double>>& y_tra
 
     return 0;
 
+}
+
+int runParallelHelper(vector<vector<double>>& thread_x_train, vector<vector<double>>& thread_y_train, Network network) {
+    
+
+    int num_epochs = 50;
+
+    // add layers and shit to network passed in
+
+    for(int x = 0; x < 50; x++) {
+        network.fitOneEpoch(thread_x_train, thread_y_train, 0.1);
+        
+        string weightsToSend = network.getWeights();
+        // barrier for threads
+        // aggregate all their weights
+        // send those over
+
+        // TODO: send that shit in to the master
+
+        // TODO: read in new net
+    }
+    return 0;
 }
 
 int runParallel(vector<vector<double>>& x_train, vector<vector<double>>& y_train) {
@@ -175,26 +201,4 @@ int runParallel(vector<vector<double>>& x_train, vector<vector<double>>& y_train
     cout << "Network trained" << endl;
 
     return 0;
-}
-
-int runParallelHelper(vector<vector<double>>& thread_x_train, vector<vector<double>>& thread_y_train, Network network) {
-    
-    Network network;  
-
-    int num_epochs = 50;
-
-    // add layers and shit  
-
-    for(int x = 0; x < 50; x++) {
-        network.fitOneEpoch(x_train, y_train, 0.1);
-        
-        string weightsToSend = getWeights()
-        // barrier for threads
-        // aggregate all their weights
-        // send those over
-
-        // TODO: send that shit in to the master
-
-        // TODO: read in new net
-    }
 }
