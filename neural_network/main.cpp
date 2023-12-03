@@ -22,6 +22,8 @@
 #include <pthread.h>
 #include <utility>
 #include <iostream>
+#include <string>
+
 
 
 using namespace std;
@@ -41,7 +43,7 @@ vector<string> ip_addrs;
 
 vector<thread> client_threads;
 
-int n_clients = 1;
+int n_clients;
 // ######################################################
 
 // ################# NEURAL NETWORK ATTRIBUTES ############################
@@ -227,10 +229,6 @@ pair<vector<vector<double>>, vector<vector<double>>> readDataMaster(int n_sample
 }
 
 vector<vector<int>> splitDataMaster(int numWorkers) {
-    int n_samples;
-    n_samples = 10;
-    string s;
-
     // randomly shuffle the indices, but seed it so that it is the same every time
     srand(0);
     vector<int> indices(n_samples);
@@ -240,16 +238,22 @@ vector<vector<int>> splitDataMaster(int numWorkers) {
     // split the indices into numWorkers chunks
     vector<vector<int>> chunks(numWorkers);
     int chunkSize = n_samples / numWorkers;
+    int remainder = n_samples % numWorkers;
+
+    int index = 0;
     for (int i = 0; i < numWorkers; i++) {
-        for (int j = i * chunkSize; j < (i + 1) * chunkSize; j++) {
-            chunks[i].push_back(indices[j]);
+        // Determine the size of the current chunk
+        int currentChunkSize = chunkSize + (i < remainder ? 1 : 0);
+
+        for (int j = 0; j < currentChunkSize; j++) {
+            chunks[i].push_back(indices[index++]);
         }
     }
 
     // print out the chunks per worker
     for (int i = 0; i < numWorkers; i++) {
         cout << "Worker " << i << ": ";
-        for (int j = 0; j < chunks[i].size(); j++) {
+        for (size_t j = 0; j < chunks[i].size(); j++) {
             cout << chunks[i][j] << " ";
         }
         cout << endl;
@@ -260,69 +264,92 @@ vector<vector<int>> splitDataMaster(int numWorkers) {
 
 
 
+vector<string> getStringToSendClients(vector<vector<int>> indices, int numWorkers) {
+    vector<string> stringsToSend;
+    for (int i = 0; i < numWorkers; i++) {
+        string s = "";
+        for (int j = 0; j < indices[i].size(); j++) {
+            s += to_string(indices[i][j]) + ",";
+        }
+        stringsToSend.push_back(s);
+    }
+    return stringsToSend;
+}
 
-// int readInDataWorker(int numWorkers) {
+
+
+int readInDataWorker(int numWorkers, string indices_to_read) {
     
-//     // Read x_train and y_train from file
-//     vector<vector<double>> x_train;
-//     vector<vector<double>> y_train;
+    // Read x_train and y_train from file
+    vector<vector<double>> x_train;
+    vector<vector<double>> y_train;
 
-//     // Read x_train and y_train from file 
-//     int n_samples, n_features, n_classes;
-//     n_samples = 10;
-//     n_features = 5;
-//     n_classes = 1;
-//     string s;
+    // Read x_train and y_train from file 
+    int n_samples, n_features, n_classes;
+    n_samples = 10;
+    n_features = 5;
+    n_classes = 1;
+    string s;
     
-//     // the first line is 'X'
-//     freopen("../data/generated_10_2_5.txt", "r", stdin);
+    // the first line is 'X'
+    freopen("../data/generated_10_2_5.txt", "r", stdin);
 
-//     // read in X train
-//     cin >> s;
-//     cout << s << endl;
-//     for (int i = 0; i < n_samples; i++) {
-//         vector<double> x;
-//         for (int j = 0; j < n_features; j++) {
-//             double temp;
-//             cin >> temp;
-//             x.push_back(temp);
-//         }
-//         x_train.push_back(x);
-//     }
+    // read in X train
+    cin >> s;
+    cout << s << endl;
+    for (int i = 0; i < n_samples; i++) {
+        vector<double> x;
+        for (int j = 0; j < n_features; j++) {
+            double temp;
+            cin >> temp;
+            x.push_back(temp);
+        }
+        x_train.push_back(x);
+    }
 
-//     // read in Y train
-//     cin >> s;
-//     cout << s << endl;
-//     for (int i = 0; i < n_samples; i++) {
-//         vector<double> y;
-//         for (int j = 0; j < n_classes; j++) {
-//             double temp;
-//             cin >> temp;
-//             y.push_back(temp);
-//         }
-//         y_train.push_back(y);
-//     }
+    // read in Y train
+    cin >> s;
+    cout << s << endl;
+    for (int i = 0; i < n_samples; i++) {
+        vector<double> y;
+        for (int j = 0; j < n_classes; j++) {
+            double temp;
+            cin >> temp;
+            y.push_back(temp);
+        }
+        y_train.push_back(y);
+    }
 
-//     string indices_to_read;
+    // make an my_x_train and my_y_train including each index in the indices_to_read
+    vector<vector<double>> my_x_train;
+    vector<vector<double>> my_y_train;
 
-//     // make an my_x_train and my_y_train including each index in the indices_to_read
-//     vector<vector<double>> my_x_train;
-//     vector<vector<double>> my_y_train;
+    // loop through the indices_to_read and add the corresponding x_train and y_train to my_x_train and my_y_train
+    for (int i = 0; i < indices_to_read.size(); i++) {
+        int index = indices_to_read[i];
+        my_x_train.push_back(x_train[index]);
+        my_y_train.push_back(y_train[index]);
+    }
 
-//     // loop through the indices_to_read and add the corresponding x_train and y_train to my_x_train and my_y_train
-//     for (int i = 0; i < indices_to_read.size(); i++) {
-//         int index = stoi(indices_to_read[i]);
-//         my_x_train.push_back(x_train[index]);
-//         my_y_train.push_back(y_train[index]);
-//     }
-
-//     // print out the my_x_train and my_y_train's dimensions
-//     cout << "my_x_train size: " << my_x_train.size() << endl;
-//     cout << "my_y_train size: " << my_y_train.size() << endl;
-// }
+    // print out the my_x_train and my_y_train's dimensions
+    cout << "my_x_train size: " << my_x_train.size() << endl;
+    cout << "my_y_train size: " << my_y_train.size() << endl;
+}
 
 int main() {
+    n_samples = 10;
+    n_clients = 4;
+
+    vector<vector<int>> indices = splitDataMaster(n_clients);
     
+    cout << endl << endl << endl;
+
+    vector<string> stringsToSend = getStringToSendClients(indices, n_clients);
+    for (int i = 0; i < stringsToSend.size(); i++) {
+        cout << stringsToSend[i] << endl;
+    }
+    cout << endl << endl << endl;
+    return 0;
 }
 
 
