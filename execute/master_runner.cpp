@@ -5,10 +5,10 @@
 #include <iostream>
 #include <ctime>
 #include <fstream>
-#include "Network.hpp"
-#include "FCLayer.hpp"
-#include "ActivationLayer.hpp"
-#include "Activations.hpp"
+#include "../neural_network/Network.hpp"
+#include "../neural_network/FCLayer.hpp"
+#include "../neural_network/ActivationLayer.hpp"
+#include "../neural_network/Activations.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +24,7 @@
 #include <utility>
 #include <iostream>
 #include <string>
-#include "../master.cpp"
+#include "../sockets/master.cpp"
 
 
 

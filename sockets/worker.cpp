@@ -9,7 +9,7 @@
 #include <time.h>
 #include <thread>
 #include <vector>
-#include "neural_network/Network.hpp"
+#include "../neural_network/Network.hpp"
 
 
 
