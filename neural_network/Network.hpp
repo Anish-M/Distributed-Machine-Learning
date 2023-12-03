@@ -50,8 +50,8 @@ public:
                     error = (*it)->backward_propagation(error, learning_rate);
                 }
 
-                cout << "Epoch " << i + 1 << "/" << epochs << " Sample " << j + 1 << "/" << x_train.size()
-                     << " Time: " << double(clock() - start_time) / CLOCKS_PER_SEC << "s" << endl;
+                // cout << "Epoch " << i + 1 << "/" << epochs << " Sample " << j + 1 << "/" << x_train.size()
+                //      << " Time: " << double(clock() - start_time) / CLOCKS_PER_SEC << "s" << endl;
             }
             err /= x_train.size();
             double time_for_epoch = double(clock() - start_time_epoch) / CLOCKS_PER_SEC;
