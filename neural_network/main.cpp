@@ -23,28 +23,13 @@
 #include <utility>
 #include <iostream>
 #include <string>
+#include "../master.cpp"
 
 
 
 using namespace std;
 
-// ################ SOCKET PROGRAMMING ATTRIBUTES ########################
-int sockfd, portno;
-socklen_t clilen;
-char buffer[256];
-struct sockaddr_in serv_addr, cli_addr;
-int n;
 
-vector<int> newsockfds;
-vector<thread> threads;
-
-// mapping of sockets to ip addresses
-vector<string> ip_addrs;
-
-vector<thread> client_threads;
-
-int n_clients;
-// ######################################################
 
 // ################# NEURAL NETWORK ATTRIBUTES ############################
 int n_samples, n_features, n_classes;
@@ -342,14 +327,23 @@ int main() {
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
     
-    cout << endl << endl << endl;
 
     vector<string> stringsToSend = getStringToSendClients(indices, n_clients);
-    for (int i = 0; i < stringsToSend.size(); i++) {
-        cout << stringsToSend[i] << endl;
-    }
-    cout << endl << endl << endl;
+
+
+
+    // ENDED STRING INITIALIZATION
+    cout << "Starting socket programming initialization" << endl;
+    open_socket();
+
+    bind_socket();
+	
+	map_sockets_to_ip_addrs();
+
+	create_client_threads();
+
     return 0;
 }
+
 
 
