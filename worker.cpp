@@ -14,6 +14,8 @@ int sockfd, portno, n;
 struct sockaddr_in serv_addr;
 struct hostent *server;
 char buffer[256];
+thread reading_t;
+bool end_thread;
 
 void open_socket() {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -51,21 +53,9 @@ void establish_connection() {
     }
 }
 
-int main(int argc, char *argv[])
-{
-
-    bool end = false;
-    portno = 8000;
-
-    open_socket();
-    get_host();
-    establish_connection();
-
-
-
-    // create a thread for sockfd to lmessages
-    thread t([&](){
-        while(!end) {
+void create_reading_thread() {
+    reading_t = thread([&](){
+        while(!end_thread) {
             bzero(buffer,256);
             n = read(sockfd,buffer,255);
             if (n < 0) 
@@ -74,9 +64,26 @@ int main(int argc, char *argv[])
                  printf("Message received: %s\n",buffer);
         }
     });
+}
+
+void join_thread() {
+    reading_t.join();
+    close(sockfd);
+}
+
+int main(int argc, char *argv[])
+{
+
+    end_thread = false;
+    portno = 8000;
+
+    open_socket();
+    get_host();
+    establish_connection();
+    create_reading_thread();
 
     
-    // send a message to the server, continuously until the user types "end"
+    // send_thread a message to the server, continuously until the user types "end_thread"
     while(1) {
         printf("Please enter the message: ");
         bzero(buffer,256);
@@ -86,17 +93,17 @@ int main(int argc, char *argv[])
              perror("perror writing to socket");
         else 
             printf("Message sent: %s\n",buffer);
-        if (strcmp(buffer, "end\n") == 0) {
-            // send 'q' to the server to tell it to quit
+        if (strcmp(buffer, "end_thread\n") == 0) {
+            // send_thread 'q' to the server to tell it to quit
             n = write(sockfd, "q", 1);
             break;
         }
     }
 
     // kill all threads and close the socket
-    end = true;
-    t.join();
-
-    close(sockfd);
+    end_thread = true;
+    
+    join_thread();
+    
     return 0;
 }

@@ -300,7 +300,7 @@ int main() {
     n_samples = 10;
     n_features = 5;
     n_classes = 2;
-    n_clients = 4;
+    n_clients = 1;
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
     
@@ -321,6 +321,7 @@ int main() {
 
 	create_client_threads();
 
+    join_threads();
     return 0;
 }
 

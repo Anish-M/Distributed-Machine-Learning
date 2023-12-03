@@ -33,7 +33,7 @@ vector<string> ip_addrs;
 
 vector<thread> client_threads;
 
-int n_clients = 1;
+int n_clients;
 // ######################################################
 
 
