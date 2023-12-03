@@ -99,7 +99,7 @@ int initialize_network() {
 }
 
 string network_string () {
-    string network_str = "";
+    string network_str = "INIT";
     network_str += network.getWeights();
     network_str += "\n";
     network_str += network.getBiases();
@@ -321,6 +321,17 @@ int main() {
 
 	create_client_threads();
 
+
+    cout << "Finished socket programming initialization" << endl;
+    cout << "Sending messages for network initialization" << endl;
+
+    // send_thread the network_init_string to all the clients
+    for (int i = 0; i < n_clients; i++) {
+        send_message_to_client(i, network_init_string);
+    }
+
+
+    cout << "Finished sending messages for network initialization" << endl;
     join_threads();
     return 0;
 }
