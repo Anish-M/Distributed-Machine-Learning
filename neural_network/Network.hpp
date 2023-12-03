@@ -64,6 +64,7 @@ public:
         }
     }
 
+    // data parallelism
     void fitOneEpoch(const vector<vector<double>>& x_train, const vector<vector<double>>& y_train, double learning_rate) {
         double err = 0;
         auto start_time_epoch = clock();
@@ -87,6 +88,47 @@ public:
         err /= x_train.size();
         double time_for_epoch = double(clock() - start_time_epoch) / CLOCKS_PER_SEC;
         cout << " time for epoch=" << time_for_epoch << "s" << endl;
+    }
+
+    // model parallelism
+    vector<double> fit_model_forwardProp(const vector<double>& x_train, const vector<double>& y_train, int epochs, double learning_rate, int my_layer) {
+    
+        double err = 0;
+        auto start_time_epoch = clock();
+        
+        auto start_time = clock();
+        vector<double> output = x_train;
+
+        int count = 0;
+        for (Layer* layer : layers) {
+            if(count == my_layer) {
+                output = layer->forward_propagation(output);
+                break;
+            }
+
+            count++;
+        }
+
+        err += loss(y_train, output);
+
+
+
+        return output;
+    }
+
+
+    void fit_model_backProp(const vector<double>& x_train, const vector<double>& y_train, vector<double>& error, int epochs, double learning_rate, int my_layer, const vector<vector<double>>& output) {
+       
+        int count = 0;
+        for (auto it = layers.rbegin(); it != layers.rend(); ++it) {
+            if(count == my_layer) {
+                error = (*it)->backward_propagation(error, learning_rate);
+                return;
+            }
+            count++;
+        }
+
+        // double time_for_epoch = double(clock() - start_time_epoch) / CLOCKS_PER_SEC;
     }
 
     string getWeights() {
@@ -125,5 +167,34 @@ public:
             // biases += "\n";
         }
         return biases;
+    }
+
+    string network_string () {
+        string network_str = "INITSTART\n";
+        network_str += getWeights();
+        network_str += "\n";
+        network_str += getBiases();
+        network_str += "\n";
+        network_str += "mse\n";
+        network_str += "INITEND";
+        return network_str;
+    }
+
+    void readInNetworkString(string network) {
+
+    }
+
+    void masterReadInNetwork(vector<string> networks) {
+        // readInNetwork String, writing values instead of overwriting
+        // zero out current weights and biases
+        // for (Layer* layer : layers) {
+        //     FCLayer* fc_layer = dynamic_cast<FCLayer*>(layer);
+        //     ActivationLayer* activation_layer = dynamic_cast<ActivationLayer*>(layer);
+        //     if (fc_layer != nullptr) {
+        //         vector<vector<double>> layer_weights = fc_layer->getWeights();
+                
+        //     }
+        // }
+         
     }
 };

@@ -9,18 +9,21 @@
 #include <time.h>
 #include <thread>
 #include <vector>
-#include "../neural_network/Network.hpp"
+// #include "../neural_network/Network.hpp"
 
 
 
 using namespace std;
 
-int sockfd, portno, n;
+// ################ SOCKET PROGRAMMING ATTRIBUTES ########################
+int sockfd, port, n;
 struct sockaddr_in serv_addr;
 struct hostent *server;
-char buffer[256];
+char buffer[2560000];
 thread reading_t;
 bool end_thread;
+// ######################################################
+
 
 void open_socket() {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -33,7 +36,7 @@ void open_socket() {
 }
 
 void get_host() {
-    server = gethostbyname("hydra.cs.utexas.edu");
+    server = gethostbyname("clue.cs.utexas.edu");
     if (server == NULL) {
         fprintf(stderr,"perror, no such host\n");
         exit(0);
@@ -49,7 +52,7 @@ void establish_connection() {
     bcopy((char *)server->h_addr, 
          (char *)&serv_addr.sin_addr.s_addr,
          server->h_length);
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(port);
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
         perror("eerror connecting");
         exit(0);
@@ -58,37 +61,26 @@ void establish_connection() {
     }
 }
 
-void create_reading_thread() {
-    reading_t = thread([&](){
-        while(!end_thread) {
-            bzero(buffer,256);
-            n = read(sockfd,buffer,255);
-            if (n < 0) 
-                 perror("perror reading from socket");
-            else 
-                 printf("Message received: %s\n",buffer);
-        }
-    });
-}
+
 
 void join_thread() {
     reading_t.join();
     close(sockfd);
 }
 
-int main(int argc, char *argv[])
-{
 
-    end_thread = false;
-    portno = 8000;
+void send_message(char* message) {
+    bzero(buffer,256);
+    fgets(buffer,255,stdin);
+    n = write(sockfd,message,strlen(message));
+    if (n < 0) 
+         perror("perror writing to socket");
+    else 
+        printf("Message sent: %s\n",message);
+}
 
-    open_socket();
-    get_host();
-    establish_connection();
-    create_reading_thread();
 
-    
-    // send_thread a message to the server, continuously until the user types "end_thread"
+void send_results() {
     while(1) {
         printf("Please enter the message: ");
         bzero(buffer,256);
@@ -104,101 +96,4 @@ int main(int argc, char *argv[])
             break;
         }
     }
-
-    // kill all threads and close the socket
-    end_thread = true;
-    
-    join_thread();
-    
-    return 0;
-}
-
-
-int runSequential(vector<vector<double>>& x_train, vector<vector<double>>& y_train) {
-    
-    Network network;  
-    // TODO: create network with read in weights and biases
-
-    int num_epochs = 50;
-
-    for(int x = 0; x < 50; x++) {
-        network.fitOneEpoch(x_train, y_train, 0.1);
-        
-        string weightsToSend = network.getWeights();
-
-        // TODO: send that shit in to the master
-
-        // TODO: read in new net
-    }
-
-
-    // network done!!
-
-    return 0;
-
-}
-
-int runParallelHelper(vector<vector<double>>& thread_x_train, vector<vector<double>>& thread_y_train, Network network) {
-    
-
-    int num_epochs = 50;
-
-    // add layers and shit to network passed in
-
-    for(int x = 0; x < 50; x++) {
-        network.fitOneEpoch(thread_x_train, thread_y_train, 0.1);
-        
-        string weightsToSend = network.getWeights();
-        // barrier for threads
-        // aggregate all their weights
-        // send those over
-
-        // TODO: send that shit in to the master
-
-        // TODO: read in new net
-    }
-    return 0;
-}
-
-int runParallel(vector<vector<double>>& x_train, vector<vector<double>>& y_train) {
-    // use 
-    int n_threads = 4;
-
-    // TODO: create network
-    Network network;    
-
-    network.fitOneEpoch(x_train, y_train, 0.1);
-
-    // partition data
-    vector<vector<vector<double>>> x_train_parts(n_threads);
-    vector<vector<vector<double>>> y_train_parts(n_threads);
-
-    size_t chunk_size = x_train.size() / n_threads;
-    size_t remainder = x_train.size() % n_threads;
-
-    for (int i = 0; i < n_threads; ++i) {
-        size_t start_idx = i * chunk_size;
-        size_t end_idx = (i + 1) * chunk_size + (i == n_threads - 1 ? remainder : 0);
-
-        x_train_parts[i] = vector<vector<double>>(x_train.begin() + start_idx, x_train.begin() + end_idx);
-        y_train_parts[i] = vector<vector<double>>(y_train.begin() + start_idx, y_train.begin() + end_idx);
-    }
-
-    // Create threads and run runParallelHelper
-    vector<thread> threads;
-    for (int i = 0; i < n_threads; ++i) {
-        threads.push_back(thread(runParallelHelper, ref(x_train_parts[i]), ref(y_train_parts[i]), network));
-    }
-
-    // Wait for all threads to finish
-    for (auto& th : threads) {
-        if (th.joinable()) {
-            th.join();
-        }
-    }
-
-    // net trained!!!
-    cout << "Network trained" << endl;
-
-    return 0;
 }

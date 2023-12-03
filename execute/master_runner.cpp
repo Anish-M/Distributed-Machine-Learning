@@ -35,6 +35,7 @@ using namespace std;
 
 // ################# NEURAL NETWORK ATTRIBUTES ############################
 int n_samples, n_features, n_classes;
+int epochs;
 vector<vector<double>> x_train;
 vector<vector<double>> y_train;
 Network network;
@@ -96,16 +97,6 @@ int initialize_network() {
     
 
     return 0;
-}
-
-string network_string () {
-    string network_str = "INIT";
-    network_str += network.getWeights();
-    network_str += "\n";
-    network_str += network.getBiases();
-    network_str += "\n";
-    network_str += "mse";
-    return network_str;
 }
 
 int runExample() {
@@ -210,15 +201,6 @@ vector<vector<int>> splitDataMaster(int numWorkers) {
         }
     }
 
-    // print out the chunks per worker
-    for (int i = 0; i < numWorkers; i++) {
-        cout << "Worker " << i << ": ";
-        for (size_t j = 0; j < chunks[i].size(); j++) {
-            cout << chunks[i][j] << " ";
-        }
-        cout << endl;
-    }
-
     return chunks;
 }
 
@@ -227,10 +209,11 @@ vector<vector<int>> splitDataMaster(int numWorkers) {
 vector<string> getStringToSendClients(vector<vector<int>> indices, int numWorkers) {
     vector<string> stringsToSend;
     for (int i = 0; i < numWorkers; i++) {
-        string s = "";
+        string s = "WORKINDEXSTART";
         for (int j = 0; j < indices[i].size(); j++) {
             s += to_string(indices[i][j]) + ",";
         }
+        s += "WORKINDEXEND";
         stringsToSend.push_back(s);
     }
     return stringsToSend;
@@ -301,17 +284,24 @@ int main() {
     n_features = 5;
     n_classes = 2;
     n_clients = 1;
+    epochs = 50;
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
     
 
     vector<string> stringsToSend = getStringToSendClients(indices, n_clients);
+    // print out stringsToSend
+    
+    
+
+
 
     initialize_network();
-    string network_init_string = network_string();
+    string network_init_string = network.network_string();
 
 
     // ENDED STRING INITIALIZATION
+
     cout << "Starting socket programming initialization" << endl;
     open_socket();
 
@@ -332,7 +322,35 @@ int main() {
 
 
     cout << "Finished sending messages for network initialization" << endl;
+
+    cout << "Sending the work indices to the clients" << endl;
+        for (int i = 0; i < stringsToSend.size(); i++) {
+        cout << "Sending work to Worker " << i << ": " << stringsToSend[i] << endl;
+        send_message_to_client(i, stringsToSend[i]);
+    }
+    cout << "Finished sending the work indices to the clients" << endl;
+    
     join_threads();
+
+
+    // this is for DATA PARALLELISM
+    for(int x = 0; x < epochs; x++) {
+        // running each epoch now
+        
+        vector<string> workerReplies;
+        // wait for message
+        for(int y = 0; y < n_clients; y++) {
+            // wait for the master to get msgses from workers
+            string msg1 = "";
+            workerReplies.push_back(msg1);
+        }
+
+        // all recieved
+        network.masterReadInNetwork(workerReplies);
+
+        string sendNewNet = network.network_string();
+        // send that string back
+    }
     return 0;
 }
 

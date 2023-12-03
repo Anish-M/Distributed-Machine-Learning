@@ -57,4 +57,8 @@ public:
     vector<double> getBiases() {
         return bias;
     }
+
+    // void zeroWeightsBiases(){
+    //     std::fill(weights.begin(), weights.end(), 0);
+    // }
 };

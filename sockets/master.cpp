@@ -19,9 +19,9 @@ using namespace std;
 
 
 // ################ SOCKET PROGRAMMING ATTRIBUTES ########################
-int sockfd, portno;
+int sockfd, port;
 socklen_t clilen;
-char buffer[256];
+char buffer[2560000];
 struct sockaddr_in serv_addr, cli_addr;
 int n;
 
@@ -48,19 +48,19 @@ void open_socket() {
 
 void bind_socket() {
 	bzero((char *) &serv_addr, sizeof(serv_addr));
-	portno = 8000;
+	port = 8000;
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons(portno);
+	serv_addr.sin_port = htons(port);
 
 	for (int i = 0; i < 5; i++) {
 		if (bind(sockfd, (struct sockaddr *) &serv_addr,
 			  sizeof(serv_addr)) < 0) {
 			perror("perror on binding");
-			portno++;
-			serv_addr.sin_port = htons(portno);
+			port++;
+			serv_addr.sin_port = htons(port);
 		} else {
-			printf("Socket bound successfully to port %d\n", portno);
+			printf("Socket bound successfully to port %d\n", port);
 			break;
 		}
 	}
@@ -70,6 +70,7 @@ void map_sockets_to_ip_addrs() {
 	listen(sockfd, n_clients);
 	clilen = sizeof(cli_addr);
 	cout << "Waiting for " << n_clients << " clients to connect" << endl;
+	cout << "that's kinda gay" << endl;
 	for (int i = 0; i < n_clients; i++) {
 		newsockfds.push_back(accept(sockfd, (struct sockaddr *) &cli_addr, &clilen));
 		if (newsockfds[i] < 0) {
@@ -122,6 +123,8 @@ void join_threads() {
 	printf("Waiting for threads to join\n");
 	for (int i = 0; i < n_clients; i++) {
 		client_threads[i].join();
+		// write ack to each client
+		send_message_to_client(i, "end_thread");
 		printf("Thread joined for client %s\n", ip_addrs[i].c_str());
 	}
 }
