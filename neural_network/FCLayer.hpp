@@ -1,7 +1,7 @@
-#include "Layer.hpp"
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#pragma once
 
 using namespace std;
 
@@ -49,5 +49,12 @@ public:
             bias[i] -= learning_rate * output_error[i];
         }
         return input_error;
+    }
+
+    vector<vector<double>> getWeights() {
+        return weights;
+    }
+    vector<double> getBiases() {
+        return bias;
     }
 };

@@ -2,6 +2,10 @@
 #include <ctime>
 #include "Layer.hpp"
 #include <iostream>
+#include <fstream>
+#include <string>
+#include "FCLayer.hpp"
+#include "ActivationLayer.hpp"
 
 using namespace std;
 
@@ -58,5 +62,42 @@ public:
             cout << "Epoch " << i + 1 << "/" << epochs << " error=" << err
                  << " time for epoch=" << time_for_epoch << "s" << endl;
         }
+    }
+    string getWeights() {
+        string weights = "weights:\n";
+        for (Layer* layer : layers) {
+            FCLayer* fc_layer = dynamic_cast<FCLayer*>(layer);
+            ActivationLayer* activation_layer = dynamic_cast<ActivationLayer*>(layer);
+            if (fc_layer != nullptr) {
+                vector<vector<double>> layer_weights = fc_layer->getWeights();
+                for (int i = 0; i < layer_weights.size(); i++) {
+                    for (int j = 0; j < layer_weights[i].size(); j++) {
+                        weights += to_string(layer_weights[i][j]) + " ";
+                    }
+                    weights += "\n";
+                }
+            } else {
+                weights += activation_layer->getFunctionName() + "\n";
+            }
+            weights += "\n";
+        }
+        return weights;
+    }
+
+    string getBiases() {
+        string biases = "biases:\n";
+        for (Layer* layer : layers) {
+            FCLayer* fc_layer = dynamic_cast<FCLayer*>(layer);
+            ActivationLayer* activation_layer = dynamic_cast<ActivationLayer*>(layer);
+            if (fc_layer != nullptr && activation_layer == nullptr) {
+                vector<double> layer_biases = fc_layer->getBiases();
+                for (int i = 0; i < layer_biases.size(); i++) {
+                    biases += to_string(layer_biases[i]) + " ";
+                }
+                biases += "\n";
+            }
+            // biases += "\n";
+        }
+        return biases;
     }
 };

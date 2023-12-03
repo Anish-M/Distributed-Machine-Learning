@@ -1,5 +1,6 @@
 #include <vector>
 #include "Layer.hpp"
+#pragma once
 
 using namespace std;
 
@@ -7,10 +8,11 @@ class ActivationLayer : public Layer {
 private:
     double (*activation)(double);
     double (*activation_prime)(double);
+    string functionName;
 
 public:
-    ActivationLayer(double (*activation)(double), double (*activation_prime)(double))
-        : activation(activation), activation_prime(activation_prime) {}
+    ActivationLayer(double (*activation)(double), double (*activation_prime)(double), string functionName)
+        : activation(activation), activation_prime(activation_prime), functionName(functionName) {}
 
     vector<double> forward_propagation(const vector<double>& input) override {
         vector<double> output;
@@ -26,5 +28,8 @@ public:
             input_error.push_back(activation_prime(output_error[i]) * output_error[i]);
         }
         return input_error;
+    }
+    string getFunctionName() {
+        return functionName;
     }
 };

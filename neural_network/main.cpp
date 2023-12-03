@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <ctime>
+#include <fstream>
 #include "Network.hpp"
 #include "FCLayer.hpp"
 #include "ActivationLayer.hpp"
@@ -24,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include "../master.cpp"
+
 
 
 
@@ -109,16 +111,23 @@ int runGenerated() {
     Network network;
 
     network.add(new FCLayer(n_features, 5));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
+    network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh_1"));
     network.add(new FCLayer(5, 8));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(relu, relu_prime)); // Add activation layer with sigmoid
+    network.add(new ActivationLayer(relu, relu_prime, "relu")); // Add activation layer with sigmoid
     network.add(new FCLayer(8, 4));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(sigmoid, sigmoid_prime)); // Add activation layer with sigmoid
+    network.add(new ActivationLayer(sigmoid, sigmoid_prime, "sigmoid")); // Add activation layer with sigmoid
     network.add(new FCLayer(4, 1));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime)); // Add activation layer with sigmoid
+    network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh")); // Add activation layer with sigmoid
 
+    network.use(mse, mse_prime);
+    
+    ofstream myfile;
+    myfile.open("test.txt");
+    myfile << network.getWeights();
+    myfile << "\n";
+    myfile << network.getBiases();
+         // Use mean squared error loss
 
-    network.use(mse, mse_prime);     // Use mean squared error loss
     network.fit(x_train, y_train, 50, 0.01);
     return 0;
 }
@@ -126,29 +135,19 @@ int runGenerated() {
 int runExample() {
     // Example usage
     Network network;
+    network.add(new FCLayer(3, 5));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh_1"));
 
+    network.add(new FCLayer(5, 5));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(relu, relu_prime, "relu"));
 
-
-    network.add(new FCLayer(n_features, 18000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(18000, 20000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(20000, 25000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(25000, 17000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(17000, 8000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(8000, 3000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(3000, 1000));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(1000, 500));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime));
-    network.add(new FCLayer(500, 1));  // Add fully connected layer with 3 inputs and 4 outputs
-
-
+    // network.add(new FCLayer(4, 5));  // Add fully connected layer with 3 inputs and 4 outputs
+    // network.add(new ActivationLayer(tanh, tanh_prime));
+    
+    network.add(new FCLayer(5, 1));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(sigmoid, sigmoid_prime, "sigmoid")); // Add activation layer with sigmoid
     network.use(mse, mse_prime);     // Use mean squared error loss
+
 
     // Train and predict
     vector<vector<double>> x_train = {{0, 0, 3}, {0, 1, 2}, {1, 0, 1}, {1, 1, 0}, {9, 9, 8}, {9, 8, 7}, {8, 9, 6}, {8, 8, 7}};
