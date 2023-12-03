@@ -9,38 +9,33 @@
 #include <time.h>
 #include <thread>
 using namespace std;
-void error(const char *msg)
-{
-    perror(msg);
-    exit(0);
-}
 
-int main(int argc, char *argv[])
-{
-    int sockfd, portno, n;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    bool end = false;
+int sockfd, portno, n;
+struct sockaddr_in serv_addr;
+struct hostent *server;
+char buffer[256];
 
-    char buffer[256];
-    if (argc < 3) {
-       fprintf(stderr,"usage %s hostname port\n", argv[0]);
-       exit(0);
-    }
-    portno = atoi(argv[2]);
+void open_socket() {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        error("ERROR opening socket");
+        perror("perror opening socket");
+        exit(0);
     } else {
         printf("Socket opened successfully\n");
     }
-    server = gethostbyname(argv[1]);
+}
+
+void get_host() {
+    server = gethostbyname("hydra.cs.utexas.edu");
     if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
+        fprintf(stderr,"perror, no such host\n");
         exit(0);
     } else {
         printf("Host found successfully\n");
     }
+}
+
+void establish_connection() {
 
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
@@ -48,11 +43,25 @@ int main(int argc, char *argv[])
          (char *)&serv_addr.sin_addr.s_addr,
          server->h_length);
     serv_addr.sin_port = htons(portno);
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-        error("ERROR connecting");
-    else {
+    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
+        perror("eerror connecting");
+        exit(0);
+    } else {
         printf("Connection established successfully\n");
     }
+}
+
+int main(int argc, char *argv[])
+{
+
+    bool end = false;
+    portno = 8000;
+
+    open_socket();
+    get_host();
+    establish_connection();
+
+
 
     // create a thread for sockfd to lmessages
     thread t([&](){
@@ -60,7 +69,7 @@ int main(int argc, char *argv[])
             bzero(buffer,256);
             n = read(sockfd,buffer,255);
             if (n < 0) 
-                 error("ERROR reading from socket");
+                 perror("perror reading from socket");
             else 
                  printf("Message received: %s\n",buffer);
         }
@@ -74,7 +83,7 @@ int main(int argc, char *argv[])
         fgets(buffer,255,stdin);
         n = write(sockfd,buffer,strlen(buffer));
         if (n < 0) 
-             error("ERROR writing to socket");
+             perror("perror writing to socket");
         else 
             printf("Message sent: %s\n",buffer);
         if (strcmp(buffer, "end\n") == 0) {

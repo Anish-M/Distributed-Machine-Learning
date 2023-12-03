@@ -1,3 +1,6 @@
+
+#ifndef master_cpp
+#define master_cpp
 /* A simple server in the internet domain using TCP
    The port number is passed as an argument */
 #include <stdio.h>
@@ -13,10 +16,7 @@
 #include <vector>
 
 using namespace std;
-void error(const char *msg)
-{
-    perror(msg);
-}
+
 
 // ################ SOCKET PROGRAMMING ATTRIBUTES ########################
 int sockfd, portno;
@@ -40,7 +40,7 @@ int n_clients = 1;
 void open_socket() {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
-		error("ERROR opening socket");
+		perror("perror opening socket");
 	} else {
 		printf("Socket opened successfully\n");
 	}
@@ -56,7 +56,7 @@ void bind_socket() {
 	for (int i = 0; i < 5; i++) {
 		if (bind(sockfd, (struct sockaddr *) &serv_addr,
 			  sizeof(serv_addr)) < 0) {
-			error("ERROR on binding");
+			perror("perror on binding");
 			portno++;
 			serv_addr.sin_port = htons(portno);
 		} else {
@@ -69,10 +69,11 @@ void bind_socket() {
 void map_sockets_to_ip_addrs() {
 	listen(sockfd, n_clients);
 	clilen = sizeof(cli_addr);
+	cout << "Waiting for " << n_clients << " clients to connect" << endl;
 	for (int i = 0; i < n_clients; i++) {
 		newsockfds.push_back(accept(sockfd, (struct sockaddr *) &cli_addr, &clilen));
 		if (newsockfds[i] < 0) {
-			error("ERROR on accept");
+			perror("perror on accept");
 		} else {
 			printf("Socket accepted successfully from client %s\n", inet_ntoa(cli_addr.sin_addr));
 			ip_addrs.push_back(inet_ntoa(cli_addr.sin_addr));
@@ -93,7 +94,7 @@ void create_client_threads() {
 				bzero(buffer, 256);
 				n = read(newsockfd, buffer, 255);
 				if (n < 0) {
-					error("ERROR reading from socket");
+					perror("perror reading from socket");
 				} else {
 					printf("%s: %s\n", ip_addr.c_str(), buffer);
 					if (buffer[0] == 113) {
@@ -111,7 +112,7 @@ void create_client_threads() {
 void send_message_to_client(int client_index, string message) {
 	n = write(newsockfds[client_index], message.c_str(), message.length());
 	if (n < 0) {
-		error("ERROR writing to socket");
+		perror("perror writing to socket");
 	} else {
 		printf("Message sent successfully to client %s\n", ip_addrs[client_index].c_str());
 	}
@@ -131,28 +132,30 @@ void close_sockets() {
 	}
 	close(sockfd);
 }
-int main(int argc, char *argv[])
-{
+// int main(int argc, char *argv[])
+// {
 
-    open_socket();
+//     open_socket();
 
-    bind_socket();
+//     bind_socket();
 	
-	map_sockets_to_ip_addrs();
+// 	map_sockets_to_ip_addrs();
 
-	create_client_threads();
-
-
-	// can write to the same sockets from the main thread
-	// write ack to each client
-	for (int i = 0; i < n_clients; i++) {
-		send_message_to_client(i, "ack");
-	}
+// 	create_client_threads();
 
 
-	join_threads();
+// 	// can write to the same sockets from the main thread
+// 	// write ack to each client
+// 	for (int i = 0; i < n_clients; i++) {
+// 		send_message_to_client(i, "ack");
+// 	}
+
+
+// 	join_threads();
 
 	
-    close_sockets();
-     return 0; 
-}
+//     close_sockets();
+//      return 0; 
+// }
+
+#endif
