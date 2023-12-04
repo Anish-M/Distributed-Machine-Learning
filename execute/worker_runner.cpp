@@ -27,6 +27,7 @@
 #include <fstream>
 #include "../sockets/worker.cpp"
 #include <sstream>
+#include <chrono>
 
 
 // ################# NEURAL NETWORK ATTRIBUTES ############################
@@ -50,6 +51,8 @@ vector<int> data_points;
 // ########################################################################
 // ################ SOCKET PROGRAMMING ATTRIBUTES ########################
 bool start_signal = false;
+const char *cstr;
+char *cstr2;
 // ########################################################################
 
 void construct_network(vector<vector<vector<double>>> weights, vector<vector<double>> biases, vector<string> activations) {
@@ -203,6 +206,7 @@ void handle_message(char *message)
         // cout << "supposed to end: " << message << endl;
         // at this point netwrok_string is doubled
         handle_init_message(network_string);
+        cout << "Master sent network initialization. Initializing network..." << endl;
         start_signal = true;
     }
     else if (msg.find("INITSTART") != string::npos)
@@ -257,8 +261,8 @@ void create_reading_thread()
 }
 
 void readInFile() {
-    n_samples = 10;
-    n_features = 5;
+    n_samples = 10000;
+    n_features = 60;
     n_classes = 2;
     // READ IN THE DATA
     string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_classes) + "_" + to_string(n_features) + ".txt";
@@ -305,7 +309,7 @@ int main(int argc, char *argv[])
     epochs = 50;
 
     open_socket();
-    string host_name = "trix.cs.utexas.edu";
+    string host_name = "hydra.cs.utexas.edu";
     char *host = &host_name[0];
     get_host(host);
     establish_connection();
@@ -334,8 +338,20 @@ int main(int argc, char *argv[])
     {
         cout << "-----------------------------------------------" << endl;
         cout << "Waiting for master to send start signal..." << endl;
+
+        // start chrono clock
+        auto start_timeout = chrono::high_resolution_clock::now();
         while(!start_signal) {
-            sleep(0.2);
+            sleep(0.1);
+            // set a timeout for 10 seconds
+            auto end_timeout = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::seconds>(end_timeout - start_timeout);
+            if (duration.count() > 10) {
+                cout << "Timeout reached " << duration.count() << ". Resending the message" << endl;
+                send_message(cstr2);
+                start_timeout = chrono::high_resolution_clock::now();
+            }
+            
         }   
         cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
         network.fitOneEpoch(my_x_train, my_y_train, 0.1);
@@ -350,8 +366,8 @@ int main(int argc, char *argv[])
         string start = "DATAP_WORKER_START\n";
         string end = "DATAP_WORKER_END\n";
         string combined = start + net_at_epoch_end + end;
-        const char *cstr = combined.c_str();
-        char* cstr2 = new char[combined.length() + 1];
+        cstr = combined.c_str();
+        cstr2 = new char[combined.length() + 1];
         strcpy(cstr2, cstr);
         // print out cstr2 for debugging
         send_message(cstr2);
