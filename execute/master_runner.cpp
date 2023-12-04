@@ -292,6 +292,8 @@ void handle_message_from_worker(string message, string ip_addr) {
         ipToWorkInProgress[ip_addr] = false;
         workerReplies[ip_addr] += message;
         ipToWorkDone[ip_addr] = true;
+
+        
     }
     else if (message.find("DATAP_WORKER_START") != string::npos)
     {
@@ -345,7 +347,7 @@ int main() {
     n_features = 5;
     n_classes = 2;
     n_clients = 1;
-    epochs = 50;
+    epochs = 5;
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
     
@@ -403,12 +405,12 @@ int main() {
     cout << "Starting network training..." << endl;
     for(int x = 0; x < epochs; x++) {
         /// wait for all the epochs
+        cout << "----------------------------------------" << endl;
         cout << "Waiting for all the workers to finish epoch..." << x << endl;
         for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
             cout << it->first << " " << it->second << endl;
         }
         while (all_completed_this_epoch() == false) {
-            sleep(0.2);
         }
         cout << "All workers finished epoch..." << x << endl;
         network.masterReadInNetwork(workerReplies);
@@ -425,6 +427,7 @@ int main() {
         }
 
         workerReplies.clear();
+        cout << "----------------------------------------" << endl;
     }
 
     join_threads();

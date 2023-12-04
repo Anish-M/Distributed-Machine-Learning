@@ -47,11 +47,14 @@ string network_string = "";
 string work_index_string = "";
 vector<int> data_points;
 // ########################################################################
-
+// ################ SOCKET PROGRAMMING ATTRIBUTES ########################
+bool start_signal = false;
 
 void construct_network(vector<vector<vector<double>>> weights, vector<vector<double>> biases, vector<string> activations) {
     // Construct the network
     cout << "Constructing network..." << endl;
+    // null out the network
+    network = Network();
 
     // alternate looping between weights/biases and activations
     int count = 0;
@@ -297,7 +300,7 @@ int main(int argc, char *argv[])
 
     end_thread = false;
     port = 8000;
-    epochs = 50;
+    epochs = 5;
 
     open_socket();
     string host_name = "hydra.cs.utexas.edu";
@@ -328,10 +331,17 @@ int main(int argc, char *argv[])
     for (int i = 0; i < epochs; i++)
     {
         cout << "-----------------------------------------------" << endl;
+        cout << "Waiting for master to send start signal..." << endl;
+
         cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
         network.fitOneEpoch(my_x_train, my_y_train, 0.1);
         cout << "Finished Epoch " << i + 1 << "/" << epochs << endl;
         string net_at_epoch_end = network.network_string();
+        // print cstr2 to a file for debugging
+        ofstream myfile;
+        myfile.open ("worker_output.txt");
+        myfile << net_at_epoch_end;
+        myfile.close();
         // DATAP_WORKER_START and DATAP_WORKER_END to the string
         string start = "DATAP_WORKER_START\n";
         string end = "DATAP_WORKER_END\n";
@@ -340,6 +350,7 @@ int main(int argc, char *argv[])
         char* cstr2 = new char[combined.length() + 1];
         strcpy(cstr2, cstr);
         send_message(cstr2);
+
         cout << "Sent results to master..." << endl;
         cout << "-----------------------------------------------" << endl;
     }
@@ -357,7 +368,7 @@ int modelRunSeq(vector<vector<double>> &weight, vector<vector<double>> &biases, 
     Network network;
     // TODO: create network with read in weights and biases
 
-    int num_epochs = 50;
+    int num_epochs = 5;
 
     for (int x = 0; x < 50; x++)
     {
