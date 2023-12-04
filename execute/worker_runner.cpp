@@ -52,9 +52,10 @@ vector<int> data_points;
 // ################ SOCKET PROGRAMMING ATTRIBUTES ########################
 bool start_signal = false;
 const char *cstr;
-char *cstr2;
+char *cstr2; // this is the most recent message
 // ########################################################################
-
+int current_epoch = 0;
+// ########################################################################
 void construct_network(vector<vector<vector<double>>> weights, vector<vector<double>> biases, vector<string> activations) {
     // Construct the network
     // alternate looping between weights/biases and activations
@@ -103,7 +104,7 @@ void handle_init_message(string message) {
     bool inWeightsSection = false, inBiasesSection = false;
     while (getline(stream, line)) {
         // Check for section headers
-        if (line.find("INITSTART") != string::npos) {
+        if (line.find("INITSTART") != string::npos || line.find("DATAP_WORKER_RESTART") != string::npos) {
             continue;
         }
         if (line.find("INITEND") != string::npos) {
@@ -196,11 +197,17 @@ void get_my_data_points()
 void handle_message(char *message)
 {
     // if its in INIT message, the first four characters are INIT
+    // log message to a file for debugging
     string msg(message);
     // if the last eight characters are INITEND, then we are done with INIT
     if (msg.find("INITEND") != string::npos)
     {
-        // cout << "INITEND message received. Processing init messages;" << endl;
+        ofstream myfile;
+        myfile.open ("network_restart.txt", ios::app);
+        myfile << message;
+        myfile.close();
+
+        cout << "INITEND message received. Processing init messages;" << endl;
         phase_init = false;
         network_string += message;
         // cout << "supposed to end: " << message << endl;
@@ -208,6 +215,24 @@ void handle_message(char *message)
         handle_init_message(network_string);
         cout << "Master sent network initialization. Initializing network..." << endl;
         start_signal = true;
+    }
+    else if (msg.find("DATAP_WORKER_RESTART") != string::npos) {
+        cout << "processing data worker restart." << endl;
+        // create a new file called network_restart.txt
+        // clear the file if its there
+        ofstream myfile;
+        myfile.open ("network_restart.txt");
+        myfile << "";
+        myfile.close();
+        // write the message to the file
+        myfile.open ("network_restart.txt", ios::app);
+        myfile << message;
+        myfile.close();
+        
+
+        current_epoch--;
+        phase_init = true;
+        network_string = message;
     }
     else if (msg.find("INITSTART") != string::npos)
     {
@@ -219,6 +244,11 @@ void handle_message(char *message)
     else if (phase_init)
     {
         // cout << "INIT message received. Processing init messages;" << endl;
+        ofstream myfile;
+        myfile.open ("network_restart.txt", ios::app);
+        myfile << message;
+        myfile.close();
+
         network_string += message;
         //cout << "adding to prev message: " << message << endl; 
     }
@@ -243,6 +273,12 @@ void handle_message(char *message)
         // cout << "WORKINDEX message received. Processing work index messages;" << endl;
         work_index_string += message;
     }
+
+    else if (msg.find("WORKER_RESEND") != string::npos) {
+        cout << "Master did not receive the network. Resending the message." << endl;
+        send_message(cstr2);
+    }
+
 }
 
 void create_reading_thread()
@@ -306,10 +342,10 @@ int main(int argc, char *argv[])
 
     end_thread = false;
     port = 8000;
-    epochs = 50;
+    epochs = 10;
 
     open_socket();
-    string host_name = "hydra.cs.utexas.edu";
+    string host_name = "trix.cs.utexas.edu";
     char *host = &host_name[0];
     get_host(host);
     establish_connection();
@@ -334,7 +370,7 @@ int main(int argc, char *argv[])
     cout << "-----------------------------------------------" << endl;
     cout << "Network Initialization complete. Starting training..." << endl;
 
-    for (int i = 0; i < epochs; i++)
+    for (current_epoch = 0; current_epoch < epochs; current_epoch++)
     {
         cout << "-----------------------------------------------" << endl;
         cout << "Waiting for master to send start signal..." << endl;
@@ -346,23 +382,20 @@ int main(int argc, char *argv[])
             // set a timeout for 10 seconds
             auto end_timeout = chrono::high_resolution_clock::now();
             auto duration = chrono::duration_cast<chrono::seconds>(end_timeout - start_timeout);
-            if (duration.count() > 10) {
+            if (duration.count() > 5) {
                 cout << "Timeout reached " << duration.count() << ". Resending the message" << endl;
-                send_message(cstr2);
+                send_message("DATAP_WORKER_RESEND");
                 start_timeout = chrono::high_resolution_clock::now();
             }
             
         }   
-        cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
+        cout << "Starting Epoch " << current_epoch + 1 << "/" << epochs << endl;
         network.fitOneEpoch(my_x_train, my_y_train, 0.1);
-        cout << "Finished Epoch " << i + 1 << "/" << epochs << endl;
+        cout << "Finished Epoch " << current_epoch + 1 << "/" << epochs << endl;
         string net_at_epoch_end = network.network_string();
-        // print cstr2 to a file for debugging
-        ofstream myfile;
-        myfile.open ("worker_output.txt");
-        myfile << net_at_epoch_end;
-        myfile.close();
-        // DATAP_WORKER_START and DATAP_WORKER_END to the string
+
+        
+        // CREATE THE STRING TO SEND AND SEND IT
         string start = "DATAP_WORKER_START\n";
         string end = "DATAP_WORKER_END\n";
         string combined = start + net_at_epoch_end + end;
@@ -377,6 +410,7 @@ int main(int argc, char *argv[])
         cout << "Sent results to master..." << endl;
         cout << "-----------------------------------------------" << endl;
     }
+
 
     
     join_thread();

@@ -288,7 +288,7 @@ int readInDataWorker(int numWorkers, string indices_to_read) {
 void handle_message_from_worker(string message, string ip_addr) {
     // message structure: DATAP_WORKER_START ......... DATAP_WORKER_END in sending the network
     if (message.find("DATAP_WORKER_END") != string::npos)
-    {
+    { 
         ipToWorkInProgress[ip_addr] = false;
         workerReplies[ip_addr] += message;
         ipToWorkDone[ip_addr] = true;
@@ -342,8 +342,8 @@ bool all_completed_this_epoch() {
 }
 
 int main() {
-    n_samples = 10;
-    n_features = 5;
+    n_samples = 10000;
+    n_features = 60;
     n_classes = 2;
     n_clients = 2;
     epochs = 50;
@@ -416,12 +416,13 @@ int main() {
             cout << it->first << " " << it->second << endl;
         }
         while (all_completed_this_epoch() == false) {
+            sleep(0.2);
         }
         cout << "All workers finished epoch..." << x << endl;
         network.masterReadInNetwork(workerReplies);
 
         string sendNewNet = network.network_string_init();
-        // set the ipToWorkDone to false
+        // reset the ipToWorkDone to false
         for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
             it->second = false;
         }
