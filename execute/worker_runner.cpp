@@ -246,7 +246,6 @@ void create_reading_thread()
             if (n < 0) {
                  perror("perror reading from socket");
             } else {
-                 printf("Message received: %s\n",buffer);
                  handle_message(buffer);
             }
         } });
@@ -264,7 +263,6 @@ void readInFile() {
     // read the first line of the file
     string s;
     cin >> s;
-    cout << s << endl;
     // the next n_samples lines are the x_train
     for (int i = 0; i < n_samples; i++) {
         vector<double> x;
@@ -280,7 +278,6 @@ void readInFile() {
     // Read y_train the next line of the file is 'Y' folllowed by n_samples lines of n_classes
     // the next line is 'Y'
     cin >> s;
-    cout << s << endl;
     // the next n_samples lines are the y_train
     for (int i = 0; i < n_samples; i++) {
         vector<double> y;
@@ -330,18 +327,21 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < epochs; i++)
     {
+        cout << "-----------------------------------------------" << endl;
         cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
         network.fitOneEpoch(my_x_train, my_y_train, 0.1);
         cout << "Finished Epoch " << i + 1 << "/" << epochs << endl;
-        cout << "Sending results to master..." << endl;
         string net_at_epoch_end = network.network_string();
         // DATAP_WORKER_START and DATAP_WORKER_END to the string
         string start = "DATAP_WORKER_START\n";
         string end = "DATAP_WORKER_END\n";
         string combined = start + net_at_epoch_end + end;
-        char *cstr;
-        strcpy(cstr, combined.c_str());
-        send_message(cstr);
+        const char *cstr = combined.c_str();
+        char* cstr2 = new char[combined.length() + 1];
+        strcpy(cstr2, cstr);
+        send_message(cstr2);
+        cout << "Sent results to master..." << endl;
+        cout << "-----------------------------------------------" << endl;
     }
 
     

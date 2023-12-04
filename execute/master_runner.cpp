@@ -284,6 +284,7 @@ int readInDataWorker(int numWorkers, string indices_to_read) {
     cout << "my_y_train size: " << my_y_train.size() << endl;
 }
 
+// receiving the network back from the clients
 void handle_message_from_worker(string message, string ip_addr) {
     // message structure: DATAP_WORKER_START ......... DATAP_WORKER_END in sending the network
     if (message.find("DATAP_WORKER_END") != string::npos)
@@ -353,7 +354,7 @@ int main() {
     // print out stringsToSend
 
     initialize_network();
-    string network_init_string = network.network_string();
+    string network_init_string = network.network_string_init();
 
 
     // ENDED STRING INITIALIZATION
@@ -368,13 +369,14 @@ int main() {
 
 	create_client_threads();
 
-    // using this ip_addrs, initialize the map ipToWorkFinished to all false
+    // INITIALIZE THE MAPS ipToWorkInProgress and ipToWorkDone
     for (int i = 0; i < n_clients; i++) {
         ipToWorkInProgress[ip_addrs[i].c_str()] = false;
     }
     for (int i = 0; i < n_clients; i++) {
         ipToWorkDone[ip_addrs[i].c_str()] = false;
     }
+
     cout << "Finished socket programming initialization" << endl;
     cout << "----------------------------------------" << endl;
     cout << "Sending messages for network initialization" << endl;
@@ -412,7 +414,11 @@ int main() {
         network.masterReadInNetwork(workerReplies);
 
         string sendNewNet = network.network_string();
-        // send that string back
+
+        // set the ipToWorkDone to false
+        for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
+            it->second = false;
+        }
 
         for (int i = 0; i < n_clients; i++) {
             send_message_to_client(i, sendNewNet);

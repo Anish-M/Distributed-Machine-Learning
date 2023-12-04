@@ -169,7 +169,7 @@ public:
         return biases;
     }
 
-    string network_string () {
+    string network_string_init () {
         string network_str = "INITSTART\n";
         network_str += getWeights();
         network_str += "\n";
@@ -177,6 +177,16 @@ public:
         network_str += "\n";
         network_str += "mse\n";
         network_str += "INITEND";
+        return network_str;
+    }
+
+    string network_string () {
+        string network_str = "";
+        network_str += getWeights();
+        network_str += "\n";
+        network_str += getBiases();
+        network_str += "\n";
+        network_str += "mse\n";
         return network_str;
     }
 

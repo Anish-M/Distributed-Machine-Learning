@@ -73,8 +73,6 @@ void send_message(char* message) {
     n = write(sockfd,message,strlen(message));
     if (n < 0) 
          perror("perror writing to socket");
-    else 
-        printf("Message sent: %s\n",message);
 }
 
 
@@ -86,8 +84,6 @@ void send_results() {
         n = write(sockfd,buffer,strlen(buffer));
         if (n < 0) 
              perror("perror writing to socket");
-        else 
-            printf("Message sent: %s\n",buffer);
         if (strcmp(buffer, "end_thread\n") == 0) {
             // send_thread 'q' to the server to tell it to quit
             n = write(sockfd, "q", 1);
