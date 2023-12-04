@@ -6,7 +6,7 @@
 #include <string>
 #include "FCLayer.hpp"
 #include "ActivationLayer.hpp"
-
+#include <map>
 using namespace std;
 
 class Network {
@@ -184,7 +184,7 @@ public:
 
     }
 
-    void masterReadInNetwork(vector<string> networks) {
+    void masterReadInNetwork(map<string, string> network) {
         // readInNetwork String, writing values instead of overwriting
         // zero out current weights and biases
         // for (Layer* layer : layers) {

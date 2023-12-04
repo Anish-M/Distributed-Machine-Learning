@@ -39,11 +39,13 @@ double relu_prime(double x) {
     return x <= 0 ? 0 : 1;
 }
 
-double leaky_relu(double x, double alpha = 0.01) {
+double leaky_relu(double x) {
+    double alpha = 0.01;
     return x >= 0 ? x : alpha * x;
 }
 
-double leaky_relu_prime(double x, double alpha = 0.01) {
+double leaky_relu_prime(double x) {
+    double alpha = 0.01;
     return x >= 0 ? 1 : alpha;
 }
 

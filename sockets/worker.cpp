@@ -70,8 +70,6 @@ void join_thread() {
 
 
 void send_message(char* message) {
-    bzero(buffer,256);
-    fgets(buffer,255,stdin);
     n = write(sockfd,message,strlen(message));
     if (n < 0) 
          perror("perror writing to socket");

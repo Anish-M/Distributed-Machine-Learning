@@ -26,6 +26,7 @@
 #include <string>
 #include "../sockets/master.cpp"
 
+#include <map>
 
 
 
@@ -40,7 +41,10 @@ vector<vector<double>> x_train;
 vector<vector<double>> y_train;
 Network network;
 // ########################################################################
-
+// ################ NETWORK COMMUNICATION ATTRIBUTES ######################
+map<string, string> workerReplies;
+map<string, bool> ipToWorkInProgress;
+// ########################################################################
 
 int initialize_network() {
 
@@ -174,7 +178,7 @@ pair<vector<vector<double>>, vector<vector<double>>> readDataMaster(int n_sample
 
     // print the x_train and y_train size
     cout << "x_train size: " << x_train.size() << endl;
-    cout << "y_train size: " << y_train.size() << endl;
+    cout << "y_train sizef " << y_train.size() << endl;
 
     return make_pair(x_train, y_train);
 }
@@ -279,6 +283,24 @@ int readInDataWorker(int numWorkers, string indices_to_read) {
     cout << "my_y_train size: " << my_y_train.size() << endl;
 }
 
+void handle_message_from_worker(string message, string ip_addr) {
+    // message structure: DATAP_WORKER_START ......... DATAP_WORKER_END in sending the network
+    if (message.find("DATAP_WORKER_END") != string::npos)
+    {
+        ipToWorkInProgress[ip_addr] = false;
+        workerReplies[ip_addr] += message;
+    }
+    else if (message.find("DATAP_WORKER_START") != string::npos)
+    {
+        ipToWorkInProgress[ip_addr] = true;
+        workerReplies[ip_addr] = "";
+        workerReplies[ip_addr] += message;
+    }
+    else if (ipToWorkInProgress[ip_addr] == true)
+    {
+        workerReplies[ip_addr] += message;
+    }
+}
 void create_client_threads() {
 	// now all the client connections have been received, create a thread for each client to continuously read from the socket
 	for (int i = 0; i < n_clients; i++) {
@@ -286,14 +308,14 @@ void create_client_threads() {
 		client_threads.push_back(thread([](int newsockfd, string ip_addr) {
 			char buffer[256];
 			int n;
-			
 			while (true || buffer[0] != 113) {
 				bzero(buffer, 256);
 				n = read(newsockfd, buffer, 255);
 				if (n < 0) {
 					perror("perror reading from socket");
 				} else {
-					printf("%s: %s\n", ip_addr.c_str(), buffer);
+                    string msg(buffer);
+                    handle_message_from_worker(msg, ip_addr.c_str());
 					if (buffer[0] == 113) {
 						printf("buffer[0] = %d\n", buffer[0]);
 						printf("Client %s has disconnected\n", ip_addr.c_str());
@@ -306,6 +328,14 @@ void create_client_threads() {
 	}
 }
 
+bool all_completed_this_epoch() {
+    for (auto it = ipToWorkInProgress.begin(); it != ipToWorkInProgress.end(); it++) {
+        if (it->second == false) {
+            return false;
+        }
+    }
+    return true;
+}
 
 int main() {
     n_samples = 10;
@@ -336,7 +366,10 @@ int main() {
 
 	create_client_threads();
 
-
+    // using this ip_addrs, initialize the map ipToWorkFinished to all false
+    for (int i = 0; i < n_clients; i++) {
+        ipToWorkInProgress[ip_addrs[i].c_str()] = false;
+    }
     cout << "Finished socket programming initialization" << endl;
     cout << "----------------------------------------" << endl;
     cout << "Sending messages for network initialization" << endl;
@@ -360,22 +393,23 @@ int main() {
 
 
     // this is for DATA PARALLELISM
+    cout << "Starting network training..." << endl;
     for(int x = 0; x < epochs; x++) {
-        // running each epoch now
-        
-        vector<string> workerReplies;
-        // wait for message
-        for(int y = 0; y < n_clients; y++) {
-            // wait for the master to get msgses from workers
-            string msg1 = "";
-            workerReplies.push_back(msg1);
+        /// wait for all the epochs
+        while (all_completed_this_epoch() == false) {
+            sleep(0.2);
         }
 
-        // all recieved
         network.masterReadInNetwork(workerReplies);
 
         string sendNewNet = network.network_string();
         // send that string back
+
+        for (int i = 0; i < n_clients; i++) {
+            send_message_to_client(i, sendNewNet);
+        }
+
+        workerReplies.clear();
     }
 
     join_threads();

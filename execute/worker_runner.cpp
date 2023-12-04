@@ -30,7 +30,7 @@
 
 // ################# NEURAL NETWORK ATTRIBUTES ############################
 // network attributes
-int n_samples, n_features, n_classes;
+int n_samples, n_features, n_classes, epochs;
 
 // my x_train and y_train
 vector<vector<double>> my_x_train;
@@ -47,6 +47,44 @@ string network_string = "";
 string work_index_string = "";
 vector<int> data_points;
 // ########################################################################
+
+
+void construct_network(vector<vector<vector<double>>> weights, vector<vector<double>> biases, vector<string> activations) {
+    // Construct the network
+    cout << "Constructing network..." << endl;
+
+    // alternate looping between weights/biases and activations
+    int count = 0;
+    for (int i = 0; i < weights.size(); i++) {
+        vector<vector<double>> layer_weights = weights[i];
+        vector<double> layer_biases = biases[i];
+        string activation = activations[i];
+
+        // create a new FCLayer
+        FCLayer* fc_layer = new FCLayer(layer_weights, layer_biases);
+        network.add(fc_layer);
+
+        // create a new ActivationLayer
+        ActivationLayer* activation_layer;
+        if (activation == "tanh_1") {
+            activation_layer = new ActivationLayer(tanh_1, tanh_prime, "tanh");
+        } else if (activation == "relu") {
+            activation_layer = new ActivationLayer(relu, relu_prime, "relu");
+        } else if (activation == "sigmoid") {
+            activation_layer = new ActivationLayer(sigmoid, sigmoid_prime, "sigmoid");
+        } else if (activation == "leaky_relu") {
+            activation_layer = new ActivationLayer(leaky_relu, leaky_relu_prime, "leaky_relu");
+        } else {
+            cout << "Invalid activation function: " << activation << endl;
+            return;
+        }
+        network.add(activation_layer);
+    }
+
+
+    network.use(mse, mse_prime);
+    cout << "Network constructed." << endl;
+}
 
 void handle_init_message(string message) {
     istringstream stream(message);
@@ -101,33 +139,12 @@ void handle_init_message(string message) {
                 weights.back().push_back(dataRow); // Add the row to the last layer of weights
             }
         }
+        
     }
 
-    // Debug: Output the parsed data
-    cout << "Weights:" << endl;
-    for (const auto &layer : weights) {
-        for (const auto &row : layer) {
-            for (double val : row) {
-                cout << val << " ";
-            }
-            cout << endl;
-        }
-        cout << endl;
-    }
-
-    cout << "Biases:" << endl;
-    for (const auto &row : biases) {
-        for (double val : row) {
-            cout << val << " ";
-        }
-        cout << endl;
-    }
-
-    cout << "Activation Functions:" << endl;
-    for (const auto &act : activations) {
-        cout << act << endl;
-    }
+    construct_network(weights, biases, activations);
 }
+
 
 void handle_workers_index_message(string message)
 {
@@ -283,6 +300,7 @@ int main(int argc, char *argv[])
 
     end_thread = false;
     port = 8000;
+    epochs = 50;
 
     open_socket();
     string host_name = "hydra.cs.utexas.edu";
@@ -297,7 +315,6 @@ int main(int argc, char *argv[])
 
     cout << "Network string created. Initializing network..." << endl;
     cout << "Work index string created. Initializing work index..." << endl;
-    cout << "Network Initialization complete. Starting training..." << endl;
     cout << "-----------------------------------------------" << endl;
     readInFile();
     cout << "Read in file complete." << endl;
@@ -309,6 +326,23 @@ int main(int argc, char *argv[])
     cout << "my_x_train size: " << my_x_train.size() << " original x_train size: " << x_train.size() << endl;
     cout << "my_y_train size: " << my_y_train.size() << " original y_train size: " << y_train.size() << endl;
     cout << "-----------------------------------------------" << endl;
+    cout << "Network Initialization complete. Starting training..." << endl;
+
+    // for (int i = 0; i < epochs; i++)
+    // {
+    //     cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
+    //     network.fitOneEpoch(my_x_train, my_y_train, 0.1);
+    //     cout << "Finished Epoch " << i + 1 << "/" << epochs << endl;
+    //     cout << "Sending results to master..." << endl;
+    //     string net_at_epoch_end = network.network_string();
+    //     // convert to char*
+    //     char *cstr = new char[net_at_epoch_end.length() + 1];
+    //     for (int i = 0; i < net_at_epoch_end.length(); i++)
+    //     {
+    //         cstr[i] = net_at_epoch_end[i];
+    //     }
+    //     send_message(cstr);
+    // }
 
     
     join_thread();
