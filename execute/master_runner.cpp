@@ -345,7 +345,7 @@ int main() {
     n_samples = 10;
     n_features = 5;
     n_classes = 2;
-    n_clients = 1;
+    n_clients = 2;
     epochs = 50;
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
