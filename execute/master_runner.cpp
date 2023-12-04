@@ -44,6 +44,7 @@ Network network;
 // ################ NETWORK COMMUNICATION ATTRIBUTES ######################
 map<string, string> workerReplies;
 map<string, bool> ipToWorkInProgress;
+map<string, int> ipToWorkDone;
 // ########################################################################
 
 int initialize_network() {
@@ -289,6 +290,7 @@ void handle_message_from_worker(string message, string ip_addr) {
     {
         ipToWorkInProgress[ip_addr] = false;
         workerReplies[ip_addr] += message;
+        ipToWorkDone[ip_addr] = true;
     }
     else if (message.find("DATAP_WORKER_START") != string::npos)
     {
@@ -329,7 +331,7 @@ void create_client_threads() {
 }
 
 bool all_completed_this_epoch() {
-    for (auto it = ipToWorkInProgress.begin(); it != ipToWorkInProgress.end(); it++) {
+    for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
         if (it->second == false) {
             return false;
         }
@@ -370,6 +372,9 @@ int main() {
     for (int i = 0; i < n_clients; i++) {
         ipToWorkInProgress[ip_addrs[i].c_str()] = false;
     }
+    for (int i = 0; i < n_clients; i++) {
+        ipToWorkDone[ip_addrs[i].c_str()] = false;
+    }
     cout << "Finished socket programming initialization" << endl;
     cout << "----------------------------------------" << endl;
     cout << "Sending messages for network initialization" << endl;
@@ -396,10 +401,14 @@ int main() {
     cout << "Starting network training..." << endl;
     for(int x = 0; x < epochs; x++) {
         /// wait for all the epochs
+        cout << "Waiting for all the workers to finish epoch..." << x << endl;
+        for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
+            cout << it->first << " " << it->second << endl;
+        }
         while (all_completed_this_epoch() == false) {
             sleep(0.2);
         }
-
+        cout << "All workers finished epoch..." << x << endl;
         network.masterReadInNetwork(workerReplies);
 
         string sendNewNet = network.network_string();

@@ -328,21 +328,21 @@ int main(int argc, char *argv[])
     cout << "-----------------------------------------------" << endl;
     cout << "Network Initialization complete. Starting training..." << endl;
 
-    // for (int i = 0; i < epochs; i++)
-    // {
-    //     cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
-    //     network.fitOneEpoch(my_x_train, my_y_train, 0.1);
-    //     cout << "Finished Epoch " << i + 1 << "/" << epochs << endl;
-    //     cout << "Sending results to master..." << endl;
-    //     string net_at_epoch_end = network.network_string();
-    //     // convert to char*
-    //     char *cstr = new char[net_at_epoch_end.length() + 1];
-    //     for (int i = 0; i < net_at_epoch_end.length(); i++)
-    //     {
-    //         cstr[i] = net_at_epoch_end[i];
-    //     }
-    //     send_message(cstr);
-    // }
+    for (int i = 0; i < epochs; i++)
+    {
+        cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
+        network.fitOneEpoch(my_x_train, my_y_train, 0.1);
+        cout << "Finished Epoch " << i + 1 << "/" << epochs << endl;
+        cout << "Sending results to master..." << endl;
+        string net_at_epoch_end = network.network_string();
+        // DATAP_WORKER_START and DATAP_WORKER_END to the string
+        string start = "DATAP_WORKER_START\n";
+        string end = "DATAP_WORKER_END\n";
+        string combined = start + net_at_epoch_end + end;
+        char *cstr;
+        strcpy(cstr, combined.c_str());
+        send_message(cstr);
+    }
 
     
     join_thread();
