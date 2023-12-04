@@ -25,9 +25,9 @@
 #include <iostream>
 #include <string>
 #include "../sockets/master.cpp"
-
+#include <chrono>
 #include <map>
-
+#include <iomanip> 
 
 
 using namespace std;
@@ -292,14 +292,13 @@ void handle_message_from_worker(string message, string ip_addr) {
         ipToWorkInProgress[ip_addr] = false;
         workerReplies[ip_addr] += message;
         ipToWorkDone[ip_addr] = true;
-
-        
+        // just print out message
     }
     else if (message.find("DATAP_WORKER_START") != string::npos)
     {
-        ipToWorkInProgress[ip_addr] = true;
         workerReplies[ip_addr] = "";
         workerReplies[ip_addr] += message;
+        ipToWorkInProgress[ip_addr] = true;
     }
     else if (ipToWorkInProgress[ip_addr] == true)
     {
@@ -347,7 +346,7 @@ int main() {
     n_features = 5;
     n_classes = 2;
     n_clients = 1;
-    epochs = 5;
+    epochs = 50;
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
     
@@ -397,7 +396,6 @@ int main() {
     for (int i = 0; i < stringsToSend.size(); i++) {
         cout << "Sending work to Worker " << i << endl;
         send_message_to_client(i, stringsToSend[i]);
-        cout << "Sent work to Worker " << i << "string " << stringsToSend[i] << endl;
         sleep(0.1);
     }
     cout << "Finished sending the work indices to the clients" << endl;
@@ -406,6 +404,10 @@ int main() {
 
     // this is for DATA PARALLELISM
     cout << "Starting network training..." << endl;
+
+    // measure the time it takes to train the network
+    clock_t start, end;
+    start = clock();
     for(int x = 0; x < epochs; x++) {
         /// wait for all the epochs
         cout << "----------------------------------------" << endl;
@@ -428,9 +430,12 @@ int main() {
             send_message_to_client(i, sendNewNet);
         }
 
-        workerReplies.clear();
+        workerReplies = {};
         cout << "----------------------------------------" << endl;
     }
+    end = clock();
+    double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
+    cout << "Time taken for training is : " << fixed << time_taken << setprecision(5) << " sec " << endl;
 
     join_threads();
     return 0;

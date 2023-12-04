@@ -55,6 +55,7 @@ bool start_signal = false;
 void construct_network(vector<vector<vector<double>>> weights, vector<vector<double>> biases, vector<string> activations) {
     // Construct the network
     // alternate looping between weights/biases and activations
+    network = Network();
     int count = 0;
     for (int i = 0; i < weights.size(); i++) {
         vector<vector<double>> layer_weights = weights[i];
@@ -301,7 +302,7 @@ int main(int argc, char *argv[])
 
     end_thread = false;
     port = 8000;
-    epochs = 5;
+    epochs = 50;
 
     open_socket();
     string host_name = "trix.cs.utexas.edu";
@@ -352,6 +353,7 @@ int main(int argc, char *argv[])
         const char *cstr = combined.c_str();
         char* cstr2 = new char[combined.length() + 1];
         strcpy(cstr2, cstr);
+        // print out cstr2 for debugging
         send_message(cstr2);
 
         start_signal = false;

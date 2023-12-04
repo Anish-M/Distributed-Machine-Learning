@@ -7,7 +7,11 @@
 #include "FCLayer.hpp"
 #include "ActivationLayer.hpp"
 #include <map>
+#include <utility>
+#include <sstream>
 using namespace std;
+
+using pair_type = pair<vector<vector<vector<double>>>, vector<vector<double>>>;
 
 class Network {
 private:
@@ -82,12 +86,13 @@ public:
                 error = (*it)->backward_propagation(error, learning_rate);
             }
 
+
             // cout << "Epoch " << i + 1 << "/" << epochs << " Sample " << j + 1 << "/" << x_train.size()
             //      << " Time: " << double(clock() - start_time) / CLOCKS_PER_SEC << "s" << endl;
         }
         err /= x_train.size();
         double time_for_epoch = double(clock() - start_time_epoch) / CLOCKS_PER_SEC;
-        cout << " time for epoch=" << time_for_epoch << "s" << endl;
+        cout << "error: " << err << " time for epoch=" << time_for_epoch << "s" << endl;
     }
 
     // model parallelism
@@ -190,8 +195,60 @@ public:
         return network_str;
     }
 
-    void readInNetworkString(string network) {
+    
+    pair_type handle_worker_network_message(string message) {
+        istringstream stream(message);
+        vector<vector<vector<double>>> weights;
+        vector<vector<double>> biases;
+        vector<string> activations;
 
+        string line;
+        bool inWeightsSection = false, inBiasesSection = false;
+        while (getline(stream, line)) {
+            // Check for section headers
+            if (line.find("DATAP_WORKER_START") != string::npos) {
+                continue;
+            }
+            if (line.find("DATAP_WORKER_END") != string::npos) {
+                break;
+            }
+            if (line.find("weights:") != string::npos) {
+                inWeightsSection = true;
+                inBiasesSection = false;
+                weights.push_back(vector<vector<double>>());
+                continue;
+            }
+            if (line.find("biases:") != string::npos) {
+                inWeightsSection = false;
+                inBiasesSection = true;
+                continue;
+            }
+            // Check for activation functions
+            if (line.find("tanh") != string::npos || line.find("relu") != string::npos || 
+                line.find("sigmoid") != string::npos || line.find("mse") != string::npos) {
+                activations.push_back(line);
+                weights.push_back(vector<vector<double>>());
+                continue;
+            }
+
+            // Parse numerical data
+            istringstream linestream(line);
+            vector<double> numbers;
+            double num;
+            while (linestream >> num) {
+                numbers.push_back(num);
+            }
+
+            // Store data in corresponding section
+            if (inWeightsSection && !numbers.empty()) {
+                weights.back().push_back(numbers);
+            } else if (inBiasesSection && !numbers.empty()) {
+                biases.push_back(numbers);
+            }
+        }
+        weights.pop_back();
+        weights.pop_back();
+        return make_pair(weights, biases);
     }
 
     void masterReadInNetwork(map<string, string> network) {
@@ -208,9 +265,58 @@ public:
         // print the length of each value
         // print out the map
         cout << "Master Read In Network" << endl;
+        vector<pair_type> all_network_data;
         for (auto const& x : network) {
-            cout << x.first << ": " << x.second << endl;
+            pair_type this_worker = handle_worker_network_message(x.second);
+            all_network_data.push_back(this_worker);
         }
-        cout << endl;
+        // cout << endl;
+        if (all_network_data.empty()) {
+            throw runtime_error("No network data available.");
+        }
+
+        int num_networks = all_network_data.size();
+        vector<vector<vector<double>>> avg_weights = all_network_data[0].first;
+        vector<vector<double>> avg_biases = all_network_data[0].second;
+
+        for (int i = 1; i < num_networks; ++i) {
+            for (size_t layer = 0; layer < avg_weights.size(); ++layer) {
+                for (size_t neuron = 0; neuron < avg_weights[layer].size(); ++neuron) {
+                    for (size_t weight = 0; weight < avg_weights[layer][neuron].size(); ++weight) {
+                        avg_weights[layer][neuron][weight] += all_network_data[i].first[layer][neuron][weight];
+                    }
+                }
+
+                for (size_t bias = 0; bias < avg_biases[layer].size(); ++bias) {
+                    avg_biases[layer][bias] += all_network_data[i].second[layer][bias];
+                }
+            }
+        }
+
+        for (auto& layer : avg_weights) {
+            for (auto& neuron : layer) {
+                for (auto& weight : neuron) {
+                    weight /= num_networks;
+                }
+            }
+        }
+
+        for (auto& layer : avg_biases) {
+            for (auto& bias : layer) {
+                bias /= num_networks;
+            }
+        }
+
+        // loop through the layers and set the weights and biases
+        int i = 0;
+        for (Layer* layer : layers) {
+            FCLayer* fc_layer = dynamic_cast<FCLayer*>(layer);
+            ActivationLayer* activation_layer = dynamic_cast<ActivationLayer*>(layer);
+            if (fc_layer != nullptr) {
+                fc_layer->setWeights(avg_weights[i]);
+                fc_layer->setBiases(avg_biases[i]);
+                i++;
+            }
+        }
     }
 };

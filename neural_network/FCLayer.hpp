@@ -58,6 +58,13 @@ public:
         return bias;
     }
 
+    void setWeights(vector<vector<double>> newWeights) {
+        weights = newWeights;
+    }
+    
+    void setBiases(vector<double> newBiases) {
+        bias = newBiases;
+    }
     // void zeroWeightsBiases(){
     //     std::fill(weights.begin(), weights.end(), 0);
     // }
