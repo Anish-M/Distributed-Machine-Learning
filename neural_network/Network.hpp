@@ -206,6 +206,11 @@ public:
         //     }
         // }
         // print the length of each value
-         
+        // print out the map
+        cout << "Master Read In Network" << endl;
+        for (auto const& x : network) {
+            cout << x.first << ": " << x.second << endl;
+        }
+        cout << endl;
     }
 };

@@ -4,6 +4,7 @@
         "*.py": "python",
         "*.c": "c",
         "ostream": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "iostream": "cpp"
     }
 }

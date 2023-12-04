@@ -1,0 +1,50 @@
+Socket opened successfully
+Host found successfully
+Connection established successfully
+Network constructed.
+Network string created. Initializing network...
+Work index string created. Initializing work index...
+-----------------------------------------------
+Reading in file: ../data/generated_10_2_5.txt
+Read in file complete.
+-----------------------------------------------
+Got my data points.
+my_x_train size: 10 original x_train size: 10
+my_y_train size: 10 original y_train size: 10
+-----------------------------------------------
+Network Initialization complete. Starting training...
+-----------------------------------------------
+Waiting for master to send start signal...
+Starting Epoch 1/5
+ time for epoch=0.000156s
+Finished Epoch 1/5
+Sent results to master...
+-----------------------------------------------
+-----------------------------------------------
+Waiting for master to send start signal...
+Network constructed.
+Starting Epoch 2/5
+ time for epoch=0.000266s
+Finished Epoch 2/5
+Sent results to master...
+-----------------------------------------------
+-----------------------------------------------
+Waiting for master to send start signal...
+Network constructed.
+Starting Epoch 3/5
+ time for epoch=0.000439s
+Finished Epoch 3/5
+Sent results to master...
+-----------------------------------------------
+-----------------------------------------------
+Waiting for master to send start signal...
+Network constructed.
+Starting Epoch 4/5
+ time for epoch=0.00049s
+Finished Epoch 4/5
+Sent results to master...
+-----------------------------------------------
+-----------------------------------------------
+Waiting for master to send start signal...
+Network constructed.
+Starting Epoch 5/5

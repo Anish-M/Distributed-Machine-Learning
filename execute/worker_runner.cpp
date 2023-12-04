@@ -28,6 +28,7 @@
 #include "../sockets/worker.cpp"
 #include <sstream>
 
+
 // ################# NEURAL NETWORK ATTRIBUTES ############################
 // network attributes
 int n_samples, n_features, n_classes, epochs;
@@ -49,13 +50,10 @@ vector<int> data_points;
 // ########################################################################
 // ################ SOCKET PROGRAMMING ATTRIBUTES ########################
 bool start_signal = false;
+// ########################################################################
 
 void construct_network(vector<vector<vector<double>>> weights, vector<vector<double>> biases, vector<string> activations) {
     // Construct the network
-    cout << "Constructing network..." << endl;
-    // null out the network
-    network = Network();
-
     // alternate looping between weights/biases and activations
     int count = 0;
     for (int i = 0; i < weights.size(); i++) {
@@ -69,7 +67,7 @@ void construct_network(vector<vector<vector<double>>> weights, vector<vector<dou
 
         // create a new ActivationLayer
         ActivationLayer* activation_layer;
-        if (activation == "tanh_1") {
+        if (activation == "tanh_1" || activation == "tanh") {
             activation_layer = new ActivationLayer(tanh_1, tanh_prime, "tanh");
         } else if (activation == "relu") {
             activation_layer = new ActivationLayer(relu, relu_prime, "relu");
@@ -83,68 +81,66 @@ void construct_network(vector<vector<vector<double>>> weights, vector<vector<dou
         }
         network.add(activation_layer);
     }
-
-
     network.use(mse, mse_prime);
+    // print out network 
+    // print out activation functions
+
     cout << "Network constructed." << endl;
 }
 
 void handle_init_message(string message) {
+
     istringstream stream(message);
     vector<vector<vector<double>>> weights;
     vector<vector<double>> biases;
     vector<string> activations;
 
-    string line, word;
-    bool initSection = false;
-    bool readingBiases = false; 
-
+    string line;
+    bool inWeightsSection = false, inBiasesSection = false;
     while (getline(stream, line)) {
-        if (line == "INITSTART") {
-            initSection = true;
+        // Check for section headers
+        if (line.find("INITSTART") != string::npos) {
             continue;
-        } else if (line == "INITEND") {
+        }
+        if (line.find("INITEND") != string::npos) {
             break;
         }
-
-        if (!initSection) {
-            continue;
-        }
-
         if (line.find("weights:") != string::npos) {
-            readingBiases = false;
-            weights.push_back(vector<vector<double>>()); // Start a new layer of weights
-            continue;
-        } else if (line.find("biases:") != string::npos) {
-            readingBiases = true;
+            inWeightsSection = true;
+            inBiasesSection = false;
+            weights.push_back(vector<vector<double>>());
             continue;
         }
-
+        if (line.find("biases:") != string::npos) {
+            inWeightsSection = false;
+            inBiasesSection = true;
+            continue;
+        }
+        // Check for activation functions
         if (line.find("tanh") != string::npos || line.find("relu") != string::npos || 
             line.find("sigmoid") != string::npos || line.find("mse") != string::npos) {
             activations.push_back(line);
+            weights.push_back(vector<vector<double>>());
             continue;
         }
 
-        istringstream lineStream(line);
-        vector<double> dataRow;
-
-        while (lineStream >> word) {
-            if (isdigit(word[0]) || word[0] == '-' || word[0] == '.') {
-                dataRow.push_back(stod(word));
-            }
+        // Parse numerical data
+        istringstream linestream(line);
+        vector<double> numbers;
+        double num;
+        while (linestream >> num) {
+            numbers.push_back(num);
         }
 
-        if (!dataRow.empty()) {
-            if (readingBiases) {
-                biases.push_back(dataRow);
-            } else if (!weights.empty()) {
-                weights.back().push_back(dataRow); // Add the row to the last layer of weights
-            }
+        // Store data in corresponding section
+        if (inWeightsSection && !numbers.empty()) {
+            weights.back().push_back(numbers);
+        } else if (inBiasesSection && !numbers.empty()) {
+            biases.push_back(numbers);
         }
-        
     }
-
+    weights.pop_back();
+    weights.pop_back();
     construct_network(weights, biases, activations);
 }
 
@@ -203,18 +199,23 @@ void handle_message(char *message)
         // cout << "INITEND message received. Processing init messages;" << endl;
         phase_init = false;
         network_string += message;
+        // cout << "supposed to end: " << message << endl;
+        // at this point netwrok_string is doubled
         handle_init_message(network_string);
+        start_signal = true;
     }
-    else if (strncmp(message, "INITSTART", 8) == 0)
+    else if (msg.find("INITSTART") != string::npos)
     {
         // cout << "INITSTART message received. Processing init messages;" << endl;
         phase_init = true;
-        network_string += message;
+        network_string = message;
+        //cout << "supposed to be starting: " << message << endl;
     }
     else if (phase_init)
     {
         // cout << "INIT message received. Processing init messages;" << endl;
         network_string += message;
+        //cout << "adding to prev message: " << message << endl; 
     }
 
     // do everything above but for WORKINDEX
@@ -226,11 +227,11 @@ void handle_message(char *message)
         handle_workers_index_message(work_index_string);
         init_complete = true;
     }
-    else if (strncmp(message, "WORKINDEXSTART", 14) == 0)
+    else if (msg.find("WORKINDEXSTART") != string::npos)
     {
         // cout << "WORKINDEXSTART message received. Processing work index messages;" << endl;
         work_index_init = true;
-        work_index_string += message;
+        work_index_string = message;
     }
     else if (work_index_init)
     {
@@ -303,7 +304,7 @@ int main(int argc, char *argv[])
     epochs = 5;
 
     open_socket();
-    string host_name = "hydra.cs.utexas.edu";
+    string host_name = "trix.cs.utexas.edu";
     char *host = &host_name[0];
     get_host(host);
     establish_connection();
@@ -332,7 +333,9 @@ int main(int argc, char *argv[])
     {
         cout << "-----------------------------------------------" << endl;
         cout << "Waiting for master to send start signal..." << endl;
-
+        while(!start_signal) {
+            sleep(0.2);
+        }   
         cout << "Starting Epoch " << i + 1 << "/" << epochs << endl;
         network.fitOneEpoch(my_x_train, my_y_train, 0.1);
         cout << "Finished Epoch " << i + 1 << "/" << epochs << endl;
@@ -350,6 +353,8 @@ int main(int argc, char *argv[])
         char* cstr2 = new char[combined.length() + 1];
         strcpy(cstr2, cstr);
         send_message(cstr2);
+
+        start_signal = false;
 
         cout << "Sent results to master..." << endl;
         cout << "-----------------------------------------------" << endl;

@@ -386,6 +386,7 @@ int main() {
     // send_thread the network_init_string to all the clients
     for (int i = 0; i < n_clients; i++) {
         send_message_to_client(i, network_init_string);
+        sleep(0.1);
     }
 
 
@@ -393,9 +394,11 @@ int main() {
     cout << "----------------------------------------" << endl;
 
     cout << "Sending the work indices to the clients" << endl;
-        for (int i = 0; i < stringsToSend.size(); i++) {
+    for (int i = 0; i < stringsToSend.size(); i++) {
         cout << "Sending work to Worker " << i << endl;
         send_message_to_client(i, stringsToSend[i]);
+        cout << "Sent work to Worker " << i << "string " << stringsToSend[i] << endl;
+        sleep(0.1);
     }
     cout << "Finished sending the work indices to the clients" << endl;
     cout << "----------------------------------------" << endl;
@@ -415,8 +418,7 @@ int main() {
         cout << "All workers finished epoch..." << x << endl;
         network.masterReadInNetwork(workerReplies);
 
-        string sendNewNet = network.network_string();
-
+        string sendNewNet = network.network_string_init();
         // set the ipToWorkDone to false
         for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
             it->second = false;
