@@ -45,6 +45,7 @@ Network network;
 map<string, string> workerReplies;
 map<string, bool> ipToWorkInProgress;
 map<string, int> ipToWorkDone;
+map<string, int> ipToClientIndex;
 // ########################################################################
 
 int initialize_network() {
@@ -90,13 +91,15 @@ int initialize_network() {
     }
 
 
-    network.add(new FCLayer(n_features, 5));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(n_features, 100));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh_1"));
-    network.add(new FCLayer(5, 8));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(100, 80));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(relu, relu_prime, "relu")); // Add activation layer with sigmoid
-    network.add(new FCLayer(8, 4));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(sigmoid, sigmoid_prime, "sigmoid")); // Add activation layer with sigmoid
-    network.add(new FCLayer(4, 1));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(80, 40));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(relu, relu_prime, "relu")); // Add activation layer with sigmoid
+    network.add(new FCLayer(40, 20));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh")); // Add activation layer with sigmoid
+    network.add(new FCLayer(20, 2));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh")); // Add activation layer with sigmoid
     network.use(mse, mse_prime);
     
@@ -228,64 +231,6 @@ vector<string> getStringToSendClients(vector<vector<int>> indices, int numWorker
 
 
 
-int readInDataWorker(int numWorkers, string indices_to_read) {
-    
-    // Read x_train and y_train from file
-    vector<vector<double>> x_train;
-    vector<vector<double>> y_train;
-
-    // Read x_train and y_train from file 
-    int n_samples, n_features, n_classes;
-    n_samples = 10;
-    n_features = 5;
-    n_classes = 1;
-    string s;
-    
-    // the first line is 'X'
-    freopen("../data/generated_10_2_5.txt", "r", stdin);
-
-    // read in X train
-    cin >> s;
-    cout << s << endl;
-    for (int i = 0; i < n_samples; i++) {
-        vector<double> x;
-        for (int j = 0; j < n_features; j++) {
-            double temp;
-            cin >> temp;
-            x.push_back(temp);
-        }
-        x_train.push_back(x);
-    }
-
-    // read in Y train
-    cin >> s;
-    cout << s << endl;
-    for (int i = 0; i < n_samples; i++) {
-        vector<double> y;
-        for (int j = 0; j < n_classes; j++) {
-            double temp;
-            cin >> temp;
-            y.push_back(temp);
-        }
-        y_train.push_back(y);
-    }
-
-    // make an my_x_train and my_y_train including each index in the indices_to_read
-    vector<vector<double>> my_x_train;
-    vector<vector<double>> my_y_train;
-
-    // loop through the indices_to_read and add the corresponding x_train and y_train to my_x_train and my_y_train
-    for (int i = 0; i < indices_to_read.size(); i++) {
-        int index = indices_to_read[i];
-        my_x_train.push_back(x_train[index]);
-        my_y_train.push_back(y_train[index]);
-    }
-
-    // print out the my_x_train and my_y_train's dimensions
-    cout << "my_x_train size: " << my_x_train.size() << endl;
-    cout << "my_y_train size: " << my_y_train.size() << endl;
-}
-
 // receiving the network back from the clients
 void handle_message_from_worker(string message, string ip_addr) {
     // message structure: DATAP_WORKER_START ......... DATAP_WORKER_END in sending the network
@@ -295,12 +240,22 @@ void handle_message_from_worker(string message, string ip_addr) {
         workerReplies[ip_addr] += message;
         ipToWorkDone[ip_addr] = true;
         // just print out message
+        
     }
     else if (message.find("DATAP_WORKER_START") != string::npos)
     {
         workerReplies[ip_addr] = "";
         workerReplies[ip_addr] += message;
         ipToWorkInProgress[ip_addr] = true;
+
+    }
+    else if (message.find("DATAP_WORKER_RESEND") != string::npos)
+    {
+        cout << "received restart message from " << ip_addr << endl;
+        ipToWorkInProgress[ip_addr] = true;
+        ipToWorkDone[ip_addr] = false;
+        string msg = "DATAP_WORKER_RESTART\n" + network.network_string() + "INITEND";
+        send_message_to_client(ipToClientIndex[ip_addr], msg);
     }
     else if (ipToWorkInProgress[ip_addr] == true)
     {
@@ -347,8 +302,8 @@ int main() {
     n_samples = 10000;
     n_features = 60;
     n_classes = 2;
-    n_clients = 2;
-    epochs = 50;
+    n_clients = 1;
+    epochs = 20;
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
     
@@ -375,6 +330,7 @@ int main() {
     // INITIALIZE THE MAPS ipToWorkInProgress and ipToWorkDone
     for (int i = 0; i < n_clients; i++) {
         ipToWorkInProgress[ip_addrs[i].c_str()] = false;
+        ipToClientIndex[ip_addrs[i].c_str()] = i;
     }
     for (int i = 0; i < n_clients; i++) {
         ipToWorkDone[ip_addrs[i].c_str()] = false;
@@ -395,10 +351,11 @@ int main() {
     cout << "----------------------------------------" << endl;
 
     cout << "Sending the work indices to the clients" << endl;
-    for (int i = 0; i < stringsToSend.size(); i++) {
-        cout << "Sending work to Worker " << i << endl;
-        send_message_to_client(i, stringsToSend[i]);
-        sleep(0.1);
+    for (int i = 0 ; i < 4; i++) {
+        for (int i = 0; i < n_clients; i++) {
+            send_message_to_client(i, stringsToSend[i]);
+            sleep(0.1);
+        }
     }
     cout << "Finished sending the work indices to the clients" << endl;
     cout << "----------------------------------------" << endl;
@@ -408,25 +365,41 @@ int main() {
     cout << "Starting network training..." << endl;
 
     // measure the time it takes to train the network
-    clock_t start, end;
-    start = clock();
-    for(int x = 0; x < epochs; x++) {
+    auto start = chrono::high_resolution_clock::now();
+    for(int x = 1; x <= epochs; x++) {
         /// wait for all the epochs
         cout << "----------------------------------------" << endl;
         cout << "Waiting for all the workers to finish epoch..." << x << endl;
         for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
             cout << it->first << " " << it->second << endl;
         }
+        
+        auto start_timeout = chrono::high_resolution_clock::now();
         while (all_completed_this_epoch() == false) {
             sleep(0.2);
+            // set a timeout for 10 seconds
+            auto end_timeout = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::seconds>(end_timeout - start_timeout);
+            if (duration.count() > 5 / (n_clients + 1)) {
+                // U DIDNT RECEIVE SOMETHING FROM SOME WORKER
+                // DO THE LOGIC HERE
+                // title the message "RESEND"
+                // send the message to the worker
+                for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
+                    if (it->second == false) {
+                        send_message_to_client(ipToClientIndex[it->first], "WORKER_RESEND");
+                    }
+                }
+                start_timeout = chrono::high_resolution_clock::now();
+            }
         }
         cout << "All workers finished epoch..." << x << endl;
         network.masterReadInNetwork(workerReplies);
 
         string sendNewNet = network.network_string_init();
-        // reset the ipToWorkDone to false
-        for (auto it = ipToWorkDone.begin(); it != ipToWorkDone.end(); it++) {
-            it->second = false;
+        // set the ipToWorkDone to false
+        for (auto& it : ipToWorkDone) {
+            it.second = false;
         }
 
         for (int i = 0; i < n_clients; i++) {
@@ -436,10 +409,9 @@ int main() {
         workerReplies = {};
         cout << "----------------------------------------" << endl;
     }
-    end = clock();
-    double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
-    cout << "Time taken for training is : " << fixed << time_taken << setprecision(5) << " sec " << endl;
-
+    auto end = chrono::high_resolution_clock::now();
+    double time_taken = chrono::duration_cast<chrono::seconds>(end - start).count();
+    cout << "Time taken for training is: " << time_taken << " seconds" << endl;
     join_threads();
     return 0;
 }
