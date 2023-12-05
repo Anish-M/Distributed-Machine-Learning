@@ -56,7 +56,7 @@ int initialize_network() {
     
     // the first line is 'X'
     // open the file ../data/generated8000_2_16000.txt with cin
-    string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_features) + "_" + to_string(n_classes) + ".txt";
+    string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_classes) + "_" + to_string(n_features) + ".txt";
     const char * c = file_name.c_str();
     freopen(c, "r", stdin);
     // read the first line of the file
@@ -109,64 +109,23 @@ int initialize_network() {
 
 
 int initialize_network_modelp() {
+    cout << "Creating network architecture..." << endl;
+    network = Network();
 
-
-    // Read x_train the first line of the file is 'X' folllowed by n_samples lines of n_features
-    string s;
-    
-    // the first line is 'X'
-    // open the file ../data/generated8000_2_16000.txt with cin
-    string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_features) + "_" + to_string(n_classes) + ".txt";
-    const char * c = file_name.c_str();
-    freopen(c, "r", stdin);
-    // read the first line of the file
-    cin >> s;
-    cout << s << endl;
-    // the next n_samples lines are the x_train
-    for (int i = 0; i < n_samples; i++) {
-        vector<double> x;
-        for (int j = 0; j < n_features; j++) {
-            double temp;
-            cin >> temp;
-            x.push_back(temp);
-        }
-        // cout << "completed reading x_train[" << i << "]" << endl;
-        x_train.push_back(x);
-    }
-
-    // Read y_train the next line of the file is 'Y' folllowed by n_samples lines of n_classes
-    // the next line is 'Y'
-    cin >> s;
-    cout << s << endl;
-    // the next n_samples lines are the y_train
-    for (int i = 0; i < n_samples; i++) {
-        vector<double> y;
-        for (int j = 0; j < n_classes; j++) {
-            double temp;
-            cin >> temp;
-            y.push_back(temp);
-        }
-        // cout << "completed reading y_train[" << i << "]" << endl;
-        y_train.push_back(y);
-    }
-
-
-    network.add(new FCLayer(n_features, 4000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(n_features, 1000));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh_1"));
-    network.add(new FCLayer(4000, 6000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(1000, 1500));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(relu, relu_prime, "relu")); // Add activation layer with sigmoid
-    network.add(new FCLayer(6000, 4000));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(1500, 1000));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(relu, relu_prime, "relu")); // Add activation layer with sigmoid
-    network.add(new FCLayer(4000, 1500));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(1000, 500));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh")); // Add activation layer with sigmoid
-    network.add(new FCLayer(1500, 300));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(500, 250));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh")); // Add activation layer with sigmoid
-    network.add(new FCLayer(300, 100));  // Add fully connected layer with 3 inputs and 4 outputs
-    network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh")); // Add activation layer with sigmoid
-    network.add(new FCLayer(100, 2));  // Add fully connected layer with 3 inputs and 4 outputs
+    network.add(new FCLayer(250, 2));  // Add fully connected layer with 3 inputs and 4 outputs
     network.add(new ActivationLayer(tanh_1, tanh_prime, "tanh")); // Add activation layer with sigmoid
     network.use(mse, mse_prime);
-    
+    cout << "Finished creating network architecture..." << endl;
 
     return 0;
 }
@@ -363,8 +322,8 @@ bool all_completed_this_epoch() {
 }
 
 int main() {
-    n_samples = 10000;
-    n_features = 60;
+    n_samples = 100;
+    n_features = 2000;
     n_classes = 2;
     n_clients = 1;
     epochs = 20;
