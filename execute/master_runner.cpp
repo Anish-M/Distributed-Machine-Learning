@@ -322,10 +322,10 @@ bool all_completed_this_epoch() {
 }
 
 int main() {
-    n_samples = 100;
-    n_features = 2000;
+    n_samples = 10000;
+    n_features = 60;
     n_classes = 2;
-    n_clients = 1;
+    n_clients = 4;
     epochs = 20;
 
     vector<vector<int>> indices = splitDataMaster(n_clients);
