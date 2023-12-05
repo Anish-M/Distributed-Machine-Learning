@@ -404,6 +404,10 @@ int main(int argc, char *argv[])
     
     join_thread();
 
+    cout << "Network trained." << endl;
+    cout << "Worker is Finished." << endl;
+    cout << "-----------------------------------------------" << endl;
+
     return 0;
 }
 
