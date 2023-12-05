@@ -51,6 +51,7 @@ vector<int> data_points;
 // ########################################################################
 // ################ SOCKET PROGRAMMING ATTRIBUTES ########################
 bool start_signal = false;
+bool restart_signal = false;
 const char *cstr;
 char *cstr2; // this is the most recent message
 // ########################################################################
@@ -357,7 +358,7 @@ int main(int argc, char *argv[])
     cout << "-----------------------------------------------" << endl;
     cout << "Network Initialization complete. Starting training..." << endl;
 
-    for (current_epoch = 0; current_epoch < epochs; current_epoch++)
+    for (current_epoch = 1; current_epoch <= epochs; current_epoch++)
     {
         cout << "-----------------------------------------------" << endl;
         cout << "Waiting for master to send start signal..." << endl;

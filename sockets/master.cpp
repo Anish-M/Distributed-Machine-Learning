@@ -21,7 +21,7 @@ using namespace std;
 // ################ SOCKET PROGRAMMING ATTRIBUTES ########################
 int sockfd, port;
 socklen_t clilen;
-char buffer[2560000];
+// char buffer[2560000];
 struct sockaddr_in serv_addr, cli_addr;
 int n;
 
@@ -89,7 +89,7 @@ void send_message_to_client(int client_index, string message) {
 	if (n < 0) {
 		perror("perror writing to socket");
 	} else {
-		printf("Message sent successfully to client %s\n", ip_addrs[client_index].c_str());
+		// printf("Message sent successfully to client %s\n", ip_addrs[client_index].c_str());
 	}
 }
 
