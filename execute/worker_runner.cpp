@@ -400,12 +400,13 @@ int main(int argc, char *argv[])
         cout << "-----------------------------------------------" << endl;
     }
 
-
-    
-    join_thread();
-
+    cout << "-----------------------------------------------" << endl;
     cout << "Network trained." << endl;
     cout << "Worker is Finished." << endl;
+    cout << "-----------------------------------------------" << endl;
+    join_thread();
+
+
     cout << "-----------------------------------------------" << endl;
 
     return 0;
