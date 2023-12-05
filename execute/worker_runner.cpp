@@ -285,8 +285,8 @@ void create_reading_thread()
 }
 
 void readInFile() {
-    n_samples = 50000;
-    n_features = 60;
+    n_samples = 100;
+    n_features = 2000;
     n_classes = 2;
     // READ IN THE DATA
     string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_classes) + "_" + to_string(n_features) + ".txt";
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
 {
 
     end_thread = false;
-    port = 8001;
+    port = 8000;
     epochs = 20;
 
     open_socket();
@@ -378,9 +378,9 @@ int main(int argc, char *argv[])
             
         }   
         current_epoch_sent = false;
-        cout << "Starting Epoch " << current_epoch + 1 << "/" << epochs << endl;
+        cout << "Starting Epoch " << current_epoch << "/" << epochs << endl;
         network.fitOneEpoch(my_x_train, my_y_train, 0.1);
-        cout << "Finished Epoch " << current_epoch + 1 << "/" << epochs << endl;
+        cout << "Finished Epoch " << current_epoch << "/" << epochs << endl;
         string net_at_epoch_end = network.network_string();
 
         
