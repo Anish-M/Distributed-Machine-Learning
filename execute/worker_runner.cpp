@@ -55,6 +55,7 @@ const char *cstr;
 char *cstr2; // this is the most recent message
 // ########################################################################
 int current_epoch = 0;
+bool current_epoch_sent = false;
 // ########################################################################
 void construct_network(vector<vector<vector<double>>> weights, vector<vector<double>> biases, vector<string> activations) {
     // Construct the network
@@ -207,7 +208,6 @@ void handle_message(char *message)
         myfile << message;
         myfile.close();
 
-        cout << "INITEND message received. Processing init messages;" << endl;
         phase_init = false;
         network_string += message;
         // cout << "supposed to end: " << message << endl;
@@ -276,7 +276,11 @@ void handle_message(char *message)
 
     else if (msg.find("WORKER_RESEND") != string::npos) {
         cout << "Master did not receive the network. Resending the message." << endl;
-        send_message(cstr2);
+        if(current_epoch_sent) {
+            send_message(cstr2);
+        }
+        // else do nothing, msg has not been calculated yet
+        // let master wait to ensure no jumping ahead
     }
 
 }
@@ -342,7 +346,7 @@ int main(int argc, char *argv[])
 
     end_thread = false;
     port = 8000;
-    epochs = 10;
+    epochs = 20;
 
     open_socket();
     string host_name = "trix.cs.utexas.edu";
@@ -389,6 +393,7 @@ int main(int argc, char *argv[])
             }
             
         }   
+        current_epoch_sent = false;
         cout << "Starting Epoch " << current_epoch + 1 << "/" << epochs << endl;
         network.fitOneEpoch(my_x_train, my_y_train, 0.1);
         cout << "Finished Epoch " << current_epoch + 1 << "/" << epochs << endl;
@@ -404,6 +409,7 @@ int main(int argc, char *argv[])
         strcpy(cstr2, cstr);
         // print out cstr2 for debugging
         send_message(cstr2);
+        current_epoch_sent = true;
 
         start_signal = false;
 
