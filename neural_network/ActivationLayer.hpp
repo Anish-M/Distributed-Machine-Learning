@@ -19,16 +19,30 @@ public:
     ActivationLayer(double (*activation)(double), double (*activation_prime)(double), string functionName)
         : activation(activation), activation_prime(activation_prime), functionName(functionName) {}
 
+    // vector<double> forward_propagation(const vector<double>& input) override {
+    //     vector<double> output;
+    //     for (double i : input) {
+    //         output.push_back(activation(i));
+    //     }
+    //     return output;
+    // }
+
+
     vector<double> forward_propagation(const vector<double>& input) {
         vector<double> output(input.size());
 
-        const int num_threads = thread::hardware_concurrency();
+        const int num_threads = 8;
 
-        auto forward_thread = [&](int thread_id) {
-            for (size_t i = thread_id; i < input.size(); i += num_threads) {
-                output[i] = activation(input[i]);
+        // split the work based on the size of input and number of threads
+        const int chunk_size = input.size() / num_threads;
+        for (int i = 0; i < num_threads; ++i) {
+            int start = i * chunk_size;
+            int end = (i + 1) * chunk_size;
+            if (i == num_threads - 1) {
+                end = input.size();
             }
-        };
+            threads.emplace_back(forward_thread, i, ref(input), ref(output), start, end);
+        }
 
         vector<thread> threads;
 
@@ -45,7 +59,7 @@ public:
         return output;
     }
 
-    
+
     vector<double> backward_propagation(const vector<double>& output_error, double learning_rate) override {
         vector<double> input_error;
         for (size_t i = 0; i < output_error.size(); ++i) {

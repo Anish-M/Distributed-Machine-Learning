@@ -59,8 +59,8 @@ public:
 
     vector<double> forward_propagation(const vector<double>& input) {
         // Get the number of threads supported by the hardware
-        const int num_threads = thread::hardware_concurrency();
-        
+        const int num_threads = 8;
+
         size_t output_size = bias.size();
         vector<double> output(output_size, 0.0);
 
