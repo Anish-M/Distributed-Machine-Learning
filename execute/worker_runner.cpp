@@ -203,10 +203,6 @@ void handle_message(char *message)
     // if the last eight characters are INITEND, then we are done with INIT
     if (msg.find("INITEND") != string::npos)
     {
-        ofstream myfile;
-        myfile.open ("network_restart.txt", ios::app);
-        myfile << message;
-        myfile.close();
 
         phase_init = false;
         network_string += message;
@@ -220,15 +216,6 @@ void handle_message(char *message)
         cout << "processing data worker restart." << endl;
         // create a new file called network_restart.txt
         // clear the file if its there
-        ofstream myfile;
-        myfile.open ("network_restart.txt");
-        myfile << "";
-        myfile.close();
-        // write the message to the file
-        myfile.open ("network_restart.txt", ios::app);
-        myfile << message;
-        myfile.close();
-        
 
         current_epoch--;
         phase_init = true;
@@ -244,10 +231,6 @@ void handle_message(char *message)
     else if (phase_init)
     {
         // cout << "INIT message received. Processing init messages;" << endl;
-        ofstream myfile;
-        myfile.open ("network_restart.txt", ios::app);
-        myfile << message;
-        myfile.close();
 
         network_string += message;
         //cout << "adding to prev message: " << message << endl; 
@@ -275,8 +258,8 @@ void handle_message(char *message)
     }
 
     else if (msg.find("WORKER_RESEND") != string::npos) {
-        cout << "Master did not receive the network. Resending the message." << endl;
         if(current_epoch_sent) {
+            cout << "Master did not receive the network. Resending the message." << endl;
             send_message(cstr2);
         }
         // else do nothing, msg has not been calculated yet
