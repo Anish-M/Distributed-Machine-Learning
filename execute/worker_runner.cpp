@@ -284,7 +284,7 @@ void create_reading_thread()
 }
 
 void readInFile() {
-    n_samples = 10000;
+    n_samples = 50000;
     n_features = 60;
     n_classes = 2;
     // READ IN THE DATA
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
 {
 
     end_thread = false;
-    port = 8000;
+    port = 8001;
     epochs = 20;
 
     open_socket();
