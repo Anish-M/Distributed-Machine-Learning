@@ -285,8 +285,8 @@ void create_reading_thread()
 }
 
 void readInFile() {
-    n_samples = 100;
-    n_features = 2000;
+    n_samples = 10000;
+    n_features = 60;
     n_classes = 2;
     // READ IN THE DATA
     string file_name = "../data/generated_" + to_string(n_samples) + "_" + to_string(n_classes) + "_" + to_string(n_features) + ".txt";
